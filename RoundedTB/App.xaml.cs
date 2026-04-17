@@ -55,18 +55,21 @@ namespace RoundedTB
             };
             _hiddenWindow.Show();
 
-            // Intercept any direct shutdown calls
+            // Log dispatcher shutdown for diagnostics. We used to throw here to
+            // "prevent" unwanted shutdown, but that just left the dispatcher in
+            // a zombie state (MainWindow disposed, process alive). WM_CLOSE is
+            // now intercepted in MainWindow.CloseButtonHook so X-button clicks
+            // never reach this path.
             this.Dispatcher.ShutdownStarted += (sender, args) =>
             {
                 if (!_allowShutdown)
                 {
-                    // WPF internals sometimes post a shutdown callback when the user clicks X
-                    // on the MainWindow even with ShutdownMode.OnExplicitShutdown. We throw
-                    // and the DispatcherUnhandledException handler swallows it. Quiet log.
-                    Log.Debug("ShutdownStarted with _allowShutdown=false; preventing.");
-                    throw new InvalidOperationException("Application shutdown not allowed - main window should stay hidden");
+                    Log.Warning("ShutdownStarted with _allowShutdown=false - something other than CloseMenuItem triggered shutdown.");
                 }
-                Log.Information("ShutdownStarted (_allowShutdown=true)");
+                else
+                {
+                    Log.Information("ShutdownStarted (_allowShutdown=true)");
+                }
             };
 
             WPFUI.Theme.Watcher.Start();
@@ -76,13 +79,13 @@ namespace RoundedTB
         {
             if (!_allowShutdown)
             {
-                // OnExit fires from WPF plumbing after user clicks X even though
-                // MainWindow.OnClosing cancelled the close. Skip base.OnExit to
-                // keep the app alive. Demoted to Debug - this is expected noise.
-                Log.Debug("OnExit called while _allowShutdown=false; suppressing.");
-                this.Dispatcher.BeginInvoke(new Action(() => { /* keep dispatcher warm */ }),
-                    System.Windows.Threading.DispatcherPriority.Send);
-                return;
+                // Previously we suppressed OnExit to "keep the app alive" after
+                // WPF tried to shut down on X-button clicks. That created a
+                // zombie process (MainWindow disposed, process alive, tray Show
+                // broken). WM_CLOSE is now intercepted upstream, so reaching
+                // this branch means something actually needs to shut us down;
+                // log it and let the exit proceed normally.
+                Log.Warning("OnExit called with _allowShutdown=false - shutting down anyway to avoid zombie state.");
             }
 
             Log.Information("App.OnExit called - Application is shutting down");
@@ -221,14 +224,6 @@ namespace RoundedTB
             // UI Thread Exceptions
             this.DispatcherUnhandledException += (sender, args) =>
             {
-                // Check if this is our shutdown prevention exception
-                if (args.Exception is InvalidOperationException ex && ex.Message.Contains("Application shutdown not allowed"))
-                {
-                    Log.Information("Successfully prevented unwanted application shutdown");
-                    args.Handled = true; // Prevent the exception from crashing the app
-                    return;
-                }
-
                 Log.Fatal(args.Exception, "Unhandled UI Exception");
                 // We are not setting Handled = true, treating it as fatal for now, but at least we log it.
             };
@@ -244,15 +239,6 @@ namespace RoundedTB
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
             {
                 var ex = args.ExceptionObject as Exception;
-
-                // Check if this is our shutdown prevention exception
-                if (ex is InvalidOperationException invalidEx && invalidEx.Message.Contains("Application shutdown not allowed"))
-                {
-                    Log.Information("Successfully prevented unwanted application shutdown at AppDomain level");
-                    // Note: We can't prevent AppDomain termination in this framework version
-                    return;
-                }
-
                 Log.Fatal(ex, "AppDomain Unhandled Exception. IsTerminating: {IsTerminating}", args.IsTerminating);
                 Log.CloseAndFlush();
             };
