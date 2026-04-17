@@ -92,14 +92,15 @@ namespace RoundedTB
                 _taskbarFrame = GetTaskbarFrameElement(_hwndTaskbarMain, _uia);
             }
 
-            // AutomationIds of TaskbarFrame children that are NOT part of the app list.
-            // Filter these out so AppListRect bounds the actual pinned/running app icons,
-            // not the whole TaskbarFrame (which includes Start, Search, Widgets, Tray, Clock).
+            // AutomationIds of TaskbarFrame children that should NOT contribute to
+            // AppListRect bounds. These are peripheral elements typically rendered
+            // outside the visual "centered group" - they might appear in TaskbarFrame
+            // on some Win11 versions but shouldn't stretch the dynamic-mode region.
+            //
+            // NOTE: Start and Search are intentionally NOT filtered - they are part
+            // of the visible centered group and the user expects them inside the region.
             private static readonly HashSet<string> NonAppListAutomationIds = new()
             {
-                "StartButton",
-                "SearchApp", "SearchBox", "SearchBoxContainer", "SearchIcon", "SearchButton",
-                "ToggleSearchFlyoutButton",
                 "CortanaMicButton",
                 "TaskViewButton", "ShowDesktopButton",
                 "WidgetsButton", "WidgetsIcon", "WidgetsButtonMini",
