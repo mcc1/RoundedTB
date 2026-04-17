@@ -428,7 +428,16 @@ namespace RoundedTB
                 {
                     LocalPInvoke.RECT workArea = display.MonitorArea;
                     workArea.Bottom = workArea.Bottom - 2;
-                    Interaction.SetWorkspace(workArea);
+                    // Skip if current work area already matches; SPIF_SENDWININICHANGE
+                    // broadcasts a WM_SETTINGCHANGE that re-flows open windows, which
+                    // the user sees as foreground apps being pulled upward on startup.
+                    if (display.WorkArea.Left != workArea.Left
+                        || display.WorkArea.Top != workArea.Top
+                        || display.WorkArea.Right != workArea.Right
+                        || display.WorkArea.Bottom != workArea.Bottom)
+                    {
+                        Interaction.SetWorkspace(workArea);
+                    }
                 }
                 foreach (Types.Taskbar taskbar in taskbarDetails)
                 {
@@ -1169,11 +1178,18 @@ namespace RoundedTB
             const int WM_CLOSE = 0x0010;
             if (msg == WM_CLOSE && !shouldReallyDieNoReally)
             {
-                Log.Debug("WM_CLOSE intercepted; hiding MainWindow instead of closing.");
-                Visibility = Visibility.Hidden;
-                if (ShowMenuItem != null)
+                // Some close paths (wpfui chrome + system menu) fire WM_CLOSE
+                // several times per click. Only act/log on the first one by
+                // gating on the current visibility; subsequent messages just
+                // swallow themselves.
+                if (IsVisible)
                 {
-                    ShowMenuItem.Header = "Show RoundedTB";
+                    Log.Debug("WM_CLOSE intercepted; hiding MainWindow instead of closing.");
+                    Visibility = Visibility.Hidden;
+                    if (ShowMenuItem != null)
+                    {
+                        ShowMenuItem.Header = "Show RoundedTB";
+                    }
                 }
                 handled = true;
             }
