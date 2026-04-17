@@ -654,32 +654,43 @@ namespace RoundedTB
 
         private void CloseMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            // Close any popup windows, but not the main window.
-            // App.Current / Windows can be null during shutdown; iterate defensively.
+            Log.Information("CloseMenuItem clicked - exiting RoundedTB");
+            shouldReallyDieNoReally = true;
+
+            // Do the taskbar cleanup ourselves (same as MainWindow.OnClosing's
+            // shouldReallyDieNoReally=true path) in case the WPF shutdown chain
+            // doesn't reach OnClosing - e.g. when the MainWindow is already in
+            // a zombie state from an earlier X press.
+            try { taskbarThread.CancelAsync(); } catch { }
+
             try
             {
-                var app = App.Current;
-                if (app != null && app.Windows != null)
+                if (taskbarDetails != null)
                 {
-                    for (int windowCount = app.Windows.Count - 1; windowCount >= 0; windowCount--)
+                    foreach (var tbDeets in taskbarDetails)
                     {
-                        var window = app.Windows[windowCount];
-                        if (window != null && window != this)
-                        {
-                            try { window.Close(); } catch { }
-                        }
+                        try { Taskbar.ResetTaskbar(tbDeets, activeSettings); } catch { }
                     }
                 }
             }
             catch { }
 
-            shouldReallyDieNoReally = true;
+            try { if (!isAlreadyRunning) interaction.WriteJSON(); } catch { }
+            try { DisposeTrayIcon(); } catch { }
 
-            try
+            try { (System.Windows.Application.Current as App)?.Shutdown(); } catch { }
+
+            // Force terminate after a short grace period. WPF's shutdown can
+            // hang when the dispatcher is in a weird state (the CE shutdown-
+            // prevention trick can leave it that way after a prior X press).
+            // Environment.Exit bypasses any remaining plumbing - we've already
+            // done the visible cleanup (reset regions, saved JSON, dropped
+            // tray icon).
+            System.Threading.Tasks.Task.Run(async () =>
             {
-                (System.Windows.Application.Current as App)?.Shutdown();
-            }
-            catch { }
+                await System.Threading.Tasks.Task.Delay(500);
+                Environment.Exit(0);
+            });
         }
 
         public void ShowMenuItem_Click(object sender, RoutedEventArgs e)
