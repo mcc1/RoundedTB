@@ -122,18 +122,16 @@ namespace RoundedTB
             LocalPInvoke.GetWindowRect(trayHwnd, out LocalPInvoke.RECT trayRectCheck);
             LocalPInvoke.GetWindowRect(appListHwnd, out LocalPInvoke.RECT appListRectCheck);
 
-            // AppListXaml (UI Automation based) is used only as a fallback when the traditional
-            // MSTaskListWClass rect is invalid (zero-width). AppListXaml returns the TaskbarFrame's
-            // full bounding rect (start + apps + widgets + tray), which breaks CE's centered region
-            // calculation that assumes AppListRect tightly bounds the app icons only.
-            bool appListRectInvalid = (appListRectCheck.Right - appListRectCheck.Left) <= 0;
-            if (appListRectInvalid)
+            // Prefer the XAML-based AppListXaml detection. On Win11 the legacy MSTaskSwWClass
+            // hwnd may still exist (for accessibility) but its rect doesn't track the real
+            // XAML-rendered app icons - it can be stale or under-report the true bounds.
+            // AppListXaml.GetWindowRect() uses UIA to enumerate TaskbarFrame children with a
+            // filter that excludes Start/Search/Widgets/Tray, giving tighter app-only bounds.
+            // Fall back to legacy rect only when XAML returns null.
+            LocalPInvoke.RECT? xamlRect = appListXaml?.GetWindowRect();
+            if (xamlRect != null && (xamlRect.Value.Right - xamlRect.Value.Left) > 0)
             {
-                LocalPInvoke.RECT? r = appListXaml?.GetWindowRect();
-                if (r != null)
-                {
-                    appListRectCheck = r.Value;
-                }
+                appListRectCheck = xamlRect.Value;
             }
 
             return new Types.Taskbar()
