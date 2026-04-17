@@ -56,6 +56,7 @@ namespace RoundedTB
         public Background background;
         public Interaction interaction;
         private HwndSource source;
+        private int lastAppliedAutoHide = -1;
         public int selectedSegment = 0; // 0 = Simple, 1 = AppList, 2 = Tray, 3 = Widgets
         /// <summary>
         /// Versions:
@@ -366,8 +367,6 @@ namespace RoundedTB
                 ShowMenuItem.Header = "Hide RoundedTB";
             }
 
-            AutoHide(true, taskbarDetails);
-
             UpdateUi();
 
         }
@@ -588,13 +587,17 @@ namespace RoundedTB
                 taskbarThread.RunWorkerAsync((mt, ml, mb, mr, 0));
             }
 
-            if (activeSettings.AutoHide < 1)
+            if (lastAppliedAutoHide != activeSettings.AutoHide)
             {
-                AutoHide(false, taskbarDetails);
-            }
-            else
-            {
-                AutoHide(true, taskbarDetails);
+                if (activeSettings.AutoHide < 1)
+                {
+                    AutoHide(false, taskbarDetails);
+                }
+                else
+                {
+                    AutoHide(true, taskbarDetails);
+                }
+                lastAppliedAutoHide = activeSettings.AutoHide;
             }
             interaction.WriteJSON();
             TrayIconCheck(isForceReset: true);
