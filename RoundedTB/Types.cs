@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -111,69 +110,8 @@ namespace RoundedTB
                 "TrayButton", "SystemTrayFrame",
             };
 
-            private static bool _diagDumped = false;
-
-            public void DumpDiagnostic()
-            {
-                if (_diagDumped) return;
-                _diagDumped = true;
-                try
-                {
-                    Serilog.Log.Information("=== AppListXaml diagnostic dump ===");
-                    Serilog.Log.Information("hwndTaskbarMain={hwnd} _taskbarFrame={tf} _uia={uia}",
-                        _hwndTaskbarMain, _taskbarFrame != null ? "OK" : "NULL",
-                        _uia != null ? "OK" : "NULL");
-                    if (_taskbarFrame == null || _uia == null)
-                    {
-                        IntPtr b1 = LocalPInvoke.FindWindowExA(_hwndTaskbarMain, IntPtr.Zero,
-                            "Windows.UI.Composition.DesktopWindowContentBridge", null);
-                        Serilog.Log.Information("DesktopWindowContentBridge hwnd={b1}", b1);
-                        if (b1 != IntPtr.Zero)
-                        {
-                            IntPtr b2 = LocalPInvoke.FindWindowExA(b1, IntPtr.Zero,
-                                "Windows.UI.Input.InputSite.WindowClass", null);
-                            Serilog.Log.Information("InputSite.WindowClass hwnd={b2}", b2);
-                        }
-                        return;
-                    }
-
-                    try
-                    {
-                        tagRECT fr = _taskbarFrame.CurrentBoundingRectangle;
-                        Serilog.Log.Information("Frame rect: L={l} T={t} R={r} B={b}",
-                            fr.left, fr.top, fr.right, fr.bottom);
-                    }
-                    catch (Exception ex) { Serilog.Log.Warning(ex, "frame rect err"); }
-
-                    IUIAutomationElementArray? kids = _taskbarFrame.FindAll(
-                        Interop.UIAutomationClient.TreeScope.TreeScope_Children,
-                        _uia.CreateTrueCondition());
-                    Serilog.Log.Information("Direct children count: {c}", kids.Length);
-                    for (int i = 0; i < kids.Length; i++)
-                    {
-                        var k = kids.GetElement(i);
-                        string aid = ""; string cls = ""; string name = ""; tagRECT rr = default;
-                        try { aid = k.CurrentAutomationId ?? ""; } catch { }
-                        try { cls = k.CurrentClassName ?? ""; } catch { }
-                        try { name = k.CurrentName ?? ""; } catch { }
-                        try { rr = k.CurrentBoundingRectangle; } catch { }
-                        Serilog.Log.Information(
-                            "  [{i}] aid='{aid}' cls='{cls}' name='{name}' L={l} R={r} ({w}px)",
-                            i, aid, cls, name, rr.left, rr.right, rr.right - rr.left);
-                        Marshal.ReleaseComObject(k);
-                    }
-                    Marshal.ReleaseComObject(kids);
-                }
-                catch (Exception ex)
-                {
-                    try { Serilog.Log.Warning(ex, "DumpDiagnostic failed"); } catch { }
-                }
-            }
-
             public LocalPInvoke.RECT? GetWindowRect()
             {
-                DumpDiagnostic();  // one-shot dump that also logs when _taskbarFrame is null
-
                 if (_taskbarFrame == null || _uia == null)
                 {
                     return null;
