@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Local test builds downloaded from CI
+.test-builds/
+
 # User-specific files
 *.rsuser
 *.suo

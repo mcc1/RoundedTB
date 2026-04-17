@@ -239,14 +239,19 @@ namespace RoundedTB
                                     }
                                 }
 
-                                // 1-second hover delay before revealing while hidden - avoids
+                                // Configurable hover dwell before revealing while hidden - avoids
                                 // accidental reveals when the mouse grazes the bottom edge while
-                                // gaming. forceShow (desktop focused) bypasses the delay.
-                                const double revealHoverMs = 1000;
+                                // gaming. forceShow (desktop focused) bypasses the delay, and a
+                                // dwell of 0 reverts to the original instant-reveal behavior.
+                                double revealHoverMs = settings.HoverRevealDelayMs;
                                 bool hoverRevealReady = false;
                                 if (isHoveringOverTaskbar)
                                 {
-                                    if (taskbars[current].HoverStartedAt == null)
+                                    if (revealHoverMs <= 0)
+                                    {
+                                        hoverRevealReady = true;
+                                    }
+                                    else if (taskbars[current].HoverStartedAt == null)
                                     {
                                         taskbars[current].HoverStartedAt = DateTime.UtcNow;
                                     }

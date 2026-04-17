@@ -229,6 +229,12 @@
                     <ComboBoxItem>Show on desktop</ComboBoxItem>
                 </ComboBox>
             </Grid>
+
+            <Grid Margin="0,0,10,138" HorizontalAlignment="Right" Width="202" Height="55" VerticalAlignment="Bottom">
+                <Label x:Name="hoverDelayLabel" Content="Hover reveal (ms)" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <TextBox x:Name="hoverDelayInput" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" HorizontalAlignment="Left" Width="94" Margin="108,19,0,0" LostFocus="hoverDelayInput_LostFocus"/>
+                <Slider x:Name="hoverDelaySlider" Height="10" VerticalAlignment="Top" HorizontalAlignment="Left" Width="84" LargeChange="100" SmallChange="50" Focusable="False" Maximum="1000" Minimum="0" Orientation="Horizontal" ValueChanged="hoverDelaySlider_ValueChanged" Margin="0,30,0,0"/>
+            </Grid>
             <Rectangle HorizontalAlignment="Center" Margin="0,262,0,0" Stroke="#4C909090" Width="698" RadiusX="1" RadiusY="1.5" Height="1" VerticalAlignment="Top"/>
 
         </Grid>

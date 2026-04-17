@@ -234,6 +234,7 @@ namespace RoundedTB
             public bool FillOnTaskSwitch { get; set; }
             public bool ShowSegmentsOnHover { get; set; }
             public int AutoHide { get; set; }
+            public int HoverRevealDelayMs { get; set; } // 0 = reveal immediately, >0 = hover for this many ms before autohide reveals
         }
 
         public class EffectiveRegion
