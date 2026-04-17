@@ -238,11 +238,47 @@ namespace RoundedTB
                                         }
                                     }
                                 }
-                                bool shouldBeVisible = isHoveringOverTaskbar || forceShow;
+
+                                // 1-second hover delay before revealing while hidden - avoids
+                                // accidental reveals when the mouse grazes the bottom edge while
+                                // gaming. forceShow (desktop focused) bypasses the delay.
+                                const double revealHoverMs = 1000;
+                                bool hoverRevealReady = false;
+                                if (isHoveringOverTaskbar)
+                                {
+                                    if (taskbars[current].HoverStartedAt == null)
+                                    {
+                                        taskbars[current].HoverStartedAt = DateTime.UtcNow;
+                                    }
+                                    else if ((DateTime.UtcNow - taskbars[current].HoverStartedAt.Value).TotalMilliseconds >= revealHoverMs)
+                                    {
+                                        hoverRevealReady = true;
+                                    }
+                                }
+                                else
+                                {
+                                    taskbars[current].HoverStartedAt = null;
+                                }
 
                                 int animSpeed = 15;
                                 byte taskbarOpacity = 0;
                                 LocalPInvoke.GetLayeredWindowAttributes(taskbars[current].TaskbarHwnd, out _, out taskbarOpacity, out _);
+
+                                // Reveal gate depends on current state:
+                                //  - Hidden: require the 1s hover OR force-show to reveal
+                                //  - Visible: any hover OR force-show keeps it visible
+                                // This prevents the taskbar from fading out mid-hover just because
+                                // the 1s dwell threshold hasn't been met yet.
+                                bool shouldBeVisible;
+                                if (taskbarOpacity == 1)
+                                {
+                                    shouldBeVisible = hoverRevealReady || forceShow;
+                                }
+                                else
+                                {
+                                    shouldBeVisible = isHoveringOverTaskbar || forceShow;
+                                }
+
                                 if (shouldBeVisible && taskbarOpacity == 1)
                                 {
                                     int style = LocalPInvoke.GetWindowLong(taskbars[current].TaskbarHwnd, LocalPInvoke.GWL_EXSTYLE).ToInt32();
