@@ -10,6 +10,11 @@ namespace RoundedTB
 {
     public class Background
     {
+        private struct ReloadChecker
+        {
+            public bool IsReload { get; set; }
+        }
+
         // Just have a reference point for the Dispatcher
         private MainWindow _mw;
         public MainWindow mw
@@ -104,19 +109,17 @@ namespace RoundedTB
                                 catch (Exception) { }
                             }
 
-                            // Update tray icon
-                            mw.Dispatcher.Invoke(() =>
+                            ReloadChecker checker = new();
+                            mw.taskbarDetails?.ForEach(taskbar =>
                             {
-                                try
+                                if (taskbar.AppListXaml.ReloadRequired)
                                 {
-                                    mw.TrayIconCheck();
-
-                                }
-                                catch (Exception)
-                                {
-
+                                    taskbar.AppListXaml.ReloadTaskbarFrameElement();
+                                    checker.IsReload = true;
                                 }
                             });
+                            // Update tray icon
+                            mw.interaction.RefreshUiTray(isForceReset: checker.IsReload);
 
                             infrequentCount = 0;
                         }
@@ -133,7 +136,9 @@ namespace RoundedTB
                         if (Taskbar.TaskbarCountOrHandleChanged(taskbars.Count, taskbars[0].TaskbarHwnd))
                         {
                             // Forcefully reset taskbars if the taskbar count or main taskbar handle has changed
-                            taskbars = Taskbar.GenerateTaskbarInfo();
+                            taskbars.ForEach(t => t.Dispose());
+                            taskbars = Taskbar.GenerateTaskbarInfo(mw.interaction.IsWindows11());
+                            mw.interaction.RefreshUiTray(isForceReset: true);
                             Debug.WriteLine("Regenerating taskbar info");
                         }
 
@@ -141,12 +146,14 @@ namespace RoundedTB
                         {
                             if (taskbars[current].TaskbarHwnd == IntPtr.Zero || taskbars[current].AppListHwnd == IntPtr.Zero)
                             {
-                                taskbars = Taskbar.GenerateTaskbarInfo();
+                                taskbars.ForEach(t => t.Dispose());
+                                taskbars = Taskbar.GenerateTaskbarInfo(mw.interaction.IsWindows11());
+                                mw.interaction.RefreshUiTray(isForceReset: true);
                                 Debug.WriteLine("Regenerating taskbar info due to a missing handle");
                                 break;
                             }
                             // Get the latest quick details of this taskbar
-                            Types.Taskbar newTaskbar = Taskbar.GetQuickTaskbarRects(taskbars[current].TaskbarHwnd, taskbars[current].TrayHwnd, taskbars[current].AppListHwnd);
+                            Types.Taskbar newTaskbar = Taskbar.GetQuickTaskbarRects(taskbars[current].TaskbarHwnd, taskbars[current].TrayHwnd, taskbars[current].AppListHwnd, taskbars[current].AppListXaml);
 
 
                             // If the taskbar's monitor has a maximised window, reset it so it's "filled"
@@ -193,7 +200,6 @@ namespace RoundedTB
                                         taskbars[current].Ignored = true;
                                         settings.ShowWidgets = false;
                                     }
-
                                 }
                             }
 
@@ -315,7 +321,7 @@ namespace RoundedTB
                         mw.taskbarDetails = taskbars;
 
 
-                    System.Threading.Thread.Sleep(100);
+                        System.Threading.Thread.Sleep(100);
                     }
                 }
                 catch (TypeInitializationException ex)
