@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -109,6 +110,66 @@ namespace RoundedTB
                 "TrayButton", "SystemTrayFrame",
             };
 
+            private static bool _diagDumped = false;
+
+            private static void DumpChildrenDiagnostic(IUIAutomationElement frame, IUIAutomation uia)
+            {
+                if (_diagDumped) return;
+                _diagDumped = true;
+                try
+                {
+                    string path = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                        "rtb-diag.log");
+                    using var sw = new StreamWriter(path, append: true);
+                    sw.WriteLine($"=== TaskbarFrame children dump @ {DateTime.Now:yyyy-MM-dd HH:mm:ss} ===");
+                    try
+                    {
+                        tagRECT frameRect = frame.CurrentBoundingRectangle;
+                        sw.WriteLine($"Frame: L={frameRect.left} T={frameRect.top} R={frameRect.right} B={frameRect.bottom} (W={frameRect.right - frameRect.left})");
+                    }
+                    catch (Exception e) { sw.WriteLine($"Frame rect error: {e.Message}"); }
+
+                    IUIAutomationElementArray? kids = frame.FindAll(
+                        Interop.UIAutomationClient.TreeScope.TreeScope_Children,
+                        uia.CreateTrueCondition());
+                    sw.WriteLine($"Direct children count: {kids.Length}");
+                    for (int i = 0; i < kids.Length; i++)
+                    {
+                        var k = kids.GetElement(i);
+                        string aid = ""; string cls = ""; string name = ""; tagRECT rr = default;
+                        try { aid = k.CurrentAutomationId ?? ""; } catch { }
+                        try { cls = k.CurrentClassName ?? ""; } catch { }
+                        try { name = k.CurrentName ?? ""; } catch { }
+                        try { rr = k.CurrentBoundingRectangle; } catch { }
+                        sw.WriteLine($"  [{i}] aid='{aid}' cls='{cls}' name='{name}' rect=(L={rr.left},T={rr.top},R={rr.right},B={rr.bottom})");
+                        Marshal.ReleaseComObject(k);
+                    }
+                    Marshal.ReleaseComObject(kids);
+
+                    // Also list all descendants whose ClassName contains "TaskList"
+                    IUIAutomationCondition cond = uia.CreatePropertyCondition(
+                        UIA_PropertyIds.UIA_ClassNamePropertyId, "Taskbar.TaskListButton");
+                    IUIAutomationElementArray? taskBtns = frame.FindAll(
+                        Interop.UIAutomationClient.TreeScope.TreeScope_Descendants, cond);
+                    sw.WriteLine($"Taskbar.TaskListButton descendants: {taskBtns.Length}");
+                    for (int i = 0; i < taskBtns.Length; i++)
+                    {
+                        var k = taskBtns.GetElement(i);
+                        string aid = ""; string name = ""; tagRECT rr = default;
+                        try { aid = k.CurrentAutomationId ?? ""; } catch { }
+                        try { name = k.CurrentName ?? ""; } catch { }
+                        try { rr = k.CurrentBoundingRectangle; } catch { }
+                        sw.WriteLine($"  [{i}] aid='{aid}' name='{name}' rect=(L={rr.left},R={rr.right})");
+                        Marshal.ReleaseComObject(k);
+                    }
+                    Marshal.ReleaseComObject(taskBtns);
+                    Marshal.ReleaseComObject(cond);
+                    sw.WriteLine();
+                }
+                catch { /* diagnostic must not crash app */ }
+            }
+
             public LocalPInvoke.RECT? GetWindowRect()
             {
                 if (_taskbarFrame == null || _uia == null)
@@ -119,6 +180,8 @@ namespace RoundedTB
                 {
                     return null;
                 }
+
+                DumpChildrenDiagnostic(_taskbarFrame, _uia);
 
                 IUIAutomationElementArray? children = null;
                 IUIAutomationElement? child = null;
