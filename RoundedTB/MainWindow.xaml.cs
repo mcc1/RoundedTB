@@ -684,25 +684,41 @@ namespace RoundedTB
 
         public void ShowMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            if (IsVisible == false)
+            try
             {
-                Visibility = Visibility.Visible;
-                ShowMenuItem.Header = "Hide RoundedTB";
-            }
-            else
-            {
-                // Close any popup windows, but not the main window
-                for (int windowCount = App.Current.Windows.Count - 1; windowCount >= 0; windowCount--)
+                if (IsVisible == false)
                 {
-                    var window = App.Current.Windows[windowCount];
-                    // Don't close the main window (this window)
-                    if (window != this)
-                    {
-                        window.Close();
-                    }
+                    Visibility = Visibility.Visible;
+                    ShowMenuItem.Header = "Hide RoundedTB";
                 }
-                Visibility = Visibility.Hidden;
-                ShowMenuItem.Header = "Show RoundedTB";
+                else
+                {
+                    var app = App.Current;
+                    if (app != null && app.Windows != null)
+                    {
+                        for (int windowCount = app.Windows.Count - 1; windowCount >= 0; windowCount--)
+                        {
+                            var window = app.Windows[windowCount];
+                            if (window != null && window != this)
+                            {
+                                try { window.Close(); } catch { }
+                            }
+                        }
+                    }
+                    Visibility = Visibility.Hidden;
+                    ShowMenuItem.Header = "Show RoundedTB";
+                }
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Window may have been closed by the WPF shutdown plumbing despite
+                // OnClosing's cancel (CE's shouldReallyDieNoReally logic is racy).
+                // Setting Visibility on a closed window throws; just log and recover.
+                Serilog.Log.Warning(ex, "ShowMenuItem_Click: window is closed, cannot toggle visibility");
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Warning(ex, "ShowMenuItem_Click unexpected error");
             }
         }
 
