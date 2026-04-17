@@ -218,15 +218,32 @@ namespace RoundedTB
                                 {
                                     isHoveringOverTaskbar = LocalPInvoke.PtInRect(ref currentTaskbarRect, msPt);
                                 }
-                                if (isHoveringOverTaskbar)
+
+                                // AutoHide=2 ("Show on desktop"): force-show when foreground is the
+                                // desktop (Progman / WorkerW). Useful for ultrawide setups where
+                                // windowed apps/games overlap the taskbar - hides while an app is
+                                // focused, reveals automatically when the user returns to desktop.
+                                bool forceShow = false;
+                                if (settings.AutoHide == 2)
                                 {
-                                    Debug.WriteLine("___");
+                                    IntPtr fg = LocalPInvoke.GetForegroundWindow();
+                                    if (fg != IntPtr.Zero)
+                                    {
+                                        StringBuilder fgClass = new StringBuilder(64);
+                                        LocalPInvoke.GetClassName(fg, fgClass, fgClass.Capacity);
+                                        string c = fgClass.ToString();
+                                        if (c == "Progman" || c == "WorkerW")
+                                        {
+                                            forceShow = true;
+                                        }
+                                    }
                                 }
+                                bool shouldBeVisible = isHoveringOverTaskbar || forceShow;
+
                                 int animSpeed = 15;
                                 byte taskbarOpacity = 0;
                                 LocalPInvoke.GetLayeredWindowAttributes(taskbars[current].TaskbarHwnd, out _, out taskbarOpacity, out _);
-                                //Debug.WriteLine($"Taskbar opacity:  {taskbarOpacity}");
-                                if (isHoveringOverTaskbar && taskbarOpacity == 1)
+                                if (shouldBeVisible && taskbarOpacity == 1)
                                 {
                                     int style = LocalPInvoke.GetWindowLong(taskbars[current].TaskbarHwnd, LocalPInvoke.GWL_EXSTYLE).ToInt32();
                                     if ((style & LocalPInvoke.WS_EX_TRANSPARENT) == LocalPInvoke.WS_EX_TRANSPARENT)
@@ -244,7 +261,7 @@ namespace RoundedTB
                                     taskbars[current].TaskbarHidden = false;
                                     Debug.WriteLine("MouseOver TB");
                                 }
-                                else if (!isHoveringOverTaskbar && taskbarOpacity == 255)
+                                else if (!shouldBeVisible && taskbarOpacity == 255)
                                 {
                                     LocalPInvoke.SetLayeredWindowAttributes(taskbars[current].TaskbarHwnd, 0, 191, LocalPInvoke.LWA_ALPHA);
                                     System.Threading.Thread.Sleep(animSpeed);

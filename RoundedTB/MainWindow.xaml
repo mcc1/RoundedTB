@@ -226,7 +226,7 @@
                 <ComboBox x:Name="autoHideComboBox" Margin="0,18,0,0" VerticalAlignment="Top">
                     <ComboBoxItem>Always show</ComboBoxItem>
                     <ComboBoxItem>Always hide</ComboBoxItem>
-                    <ComboBoxItem>[unavailable]</ComboBoxItem>
+                    <ComboBoxItem>Show on desktop</ComboBoxItem>
                 </ComboBox>
             </Grid>
             <Rectangle HorizontalAlignment="Center" Margin="0,262,0,0" Stroke="#4C909090" Width="698" RadiusX="1" RadiusY="1.5" Height="1" VerticalAlignment="Top"/>

@@ -77,8 +77,6 @@
                 <Expander x:Name="expander3" HorizontalAlignment="Center" Header="Known issues" VerticalAlignment="Top" Width="480" FontSize="16" FontFamily="Segoe UI Semibold">
                     <Grid>
                         <TextBlock Margin="0,5,0,0" x:Name="bodyBlock3" TextWrapping="Wrap" FontWeight="Normal" FontFamily="Segoe UI" FontSize="14" Opacity="0.8" LineHeight="23">
-                    • Using RoundedTB with Windows' autohide feature can result in heavy flickering, bugs, an inability to access the taskbar and isn't supported. An upcoming version of RoundedTB will introduce a custom autohide feature that will work correctly.
-                    <LineBreak/>
                     • Dynamic mode and split mode only work correctly when the taskbar is at the top or bottom of the monitor.
                     <LineBreak/>
                     • Split mode on Windows 10 is currently only supported on the primary monitor.
