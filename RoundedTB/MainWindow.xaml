@@ -221,19 +221,16 @@
                 <Label Content="To begin, select a taskbar segment below." HorizontalAlignment="Center" Margin="0,138,0,75" FontFamily="Segoe UI Variable Display" FontWeight="SemiBold" FontSize="20" Opacity="0.75"/>
             </Grid>
 
-            <Grid Margin="0,0,10,83" HorizontalAlignment="Right" Width="133" Height="50" VerticalAlignment="Bottom">
-                <Label Content="Auto-hide" Height="20" VerticalAlignment="Top"/>
-                <ComboBox x:Name="autoHideComboBox" Margin="0,18,0,0" VerticalAlignment="Top">
+            <Grid Margin="0,0,10,83" HorizontalAlignment="Right" Width="202" Height="105" VerticalAlignment="Bottom">
+                <Label Content="Auto-hide" Height="20" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <ComboBox x:Name="autoHideComboBox" Margin="0,18,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="133">
                     <ComboBoxItem>Always show</ComboBoxItem>
                     <ComboBoxItem>Always hide</ComboBoxItem>
                     <ComboBoxItem>Show on desktop</ComboBoxItem>
                 </ComboBox>
-            </Grid>
-
-            <Grid Margin="0,0,10,138" HorizontalAlignment="Right" Width="202" Height="55" VerticalAlignment="Bottom">
-                <Label x:Name="hoverDelayLabel" Content="Hover reveal (ms)" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                <TextBox x:Name="hoverDelayInput" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" HorizontalAlignment="Left" Width="94" Margin="108,19,0,0" LostFocus="hoverDelayInput_LostFocus"/>
-                <Slider x:Name="hoverDelaySlider" Height="10" VerticalAlignment="Top" HorizontalAlignment="Left" Width="84" LargeChange="100" SmallChange="50" Focusable="False" Maximum="1000" Minimum="0" Orientation="Horizontal" ValueChanged="hoverDelaySlider_ValueChanged" Margin="0,30,0,0"/>
+                <Label x:Name="hoverDelayLabel" Content="Hover reveal (ms)" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,55,0,0"/>
+                <TextBox x:Name="hoverDelayInput" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" HorizontalAlignment="Left" Width="94" Margin="108,74,0,0" LostFocus="hoverDelayInput_LostFocus"/>
+                <Slider x:Name="hoverDelaySlider" Height="10" VerticalAlignment="Top" HorizontalAlignment="Left" Width="84" LargeChange="100" SmallChange="50" Focusable="False" Maximum="1000" Minimum="0" Orientation="Horizontal" ValueChanged="hoverDelaySlider_ValueChanged" Margin="0,85,0,0"/>
             </Grid>
             <Rectangle HorizontalAlignment="Center" Margin="0,262,0,0" Stroke="#4C909090" Width="698" RadiusX="1" RadiusY="1.5" Height="1" VerticalAlignment="Top"/>
 
