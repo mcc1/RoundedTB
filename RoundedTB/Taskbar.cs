@@ -299,8 +299,13 @@ namespace RoundedTB
                     int leftMargin = Convert.ToInt32(settings.DynamicAppListLayout.MarginLeft * taskbar.ScaleFactor);
                     int rightMargin = Convert.ToInt32(settings.DynamicAppListLayout.MarginRight * taskbar.ScaleFactor);
 
-                    int left = Math.Max(0, appListLeft - leftMargin - Convert.ToInt32(50 * taskbar.ScaleFactor));
-                    int right = Math.Min(taskbar.TaskbarRect.Right - taskbar.TaskbarRect.Left, appListRight + rightMargin + Convert.ToInt32(50 * taskbar.ScaleFactor));
+                    // No hardcoded buffer: the old +50px (scaled to 100px on 4K!) was a band-aid
+                    // for the inaccurate legacy MSTaskSwWClass rect. With AppListXaml giving
+                    // accurate bounds, any extra padding comes entirely from the user's margins.
+                    // Overlapping with Search on the left was caused by the buffer eating into
+                    // the SearchButton (which on some setups is 275px+ wide).
+                    int left = Math.Max(0, appListLeft - leftMargin);
+                    int right = Math.Min(taskbar.TaskbarRect.Right - taskbar.TaskbarRect.Left, appListRight + rightMargin);
 
                     int top = centredEffectiveRegion.Top;
                     // Height field stores the BOTTOM coordinate (taskbarHeight - marginBottom),
