@@ -112,28 +112,42 @@ namespace RoundedTB
 
             private static bool _diagDumped = false;
 
-            private static void DumpChildrenDiagnostic(IUIAutomationElement frame, IUIAutomation uia)
+            public void DumpDiagnostic()
             {
                 if (_diagDumped) return;
                 _diagDumped = true;
                 try
                 {
-                    string path = Path.Combine(
-                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                        "rtb-diag.log");
-                    using var sw = new StreamWriter(path, append: true);
-                    sw.WriteLine($"=== TaskbarFrame children dump @ {DateTime.Now:yyyy-MM-dd HH:mm:ss} ===");
+                    Serilog.Log.Information("=== AppListXaml diagnostic dump ===");
+                    Serilog.Log.Information("hwndTaskbarMain={hwnd} _taskbarFrame={tf} _uia={uia}",
+                        _hwndTaskbarMain, _taskbarFrame != null ? "OK" : "NULL",
+                        _uia != null ? "OK" : "NULL");
+                    if (_taskbarFrame == null || _uia == null)
+                    {
+                        IntPtr b1 = LocalPInvoke.FindWindowExA(_hwndTaskbarMain, IntPtr.Zero,
+                            "Windows.UI.Composition.DesktopWindowContentBridge", null);
+                        Serilog.Log.Information("DesktopWindowContentBridge hwnd={b1}", b1);
+                        if (b1 != IntPtr.Zero)
+                        {
+                            IntPtr b2 = LocalPInvoke.FindWindowExA(b1, IntPtr.Zero,
+                                "Windows.UI.Input.InputSite.WindowClass", null);
+                            Serilog.Log.Information("InputSite.WindowClass hwnd={b2}", b2);
+                        }
+                        return;
+                    }
+
                     try
                     {
-                        tagRECT frameRect = frame.CurrentBoundingRectangle;
-                        sw.WriteLine($"Frame: L={frameRect.left} T={frameRect.top} R={frameRect.right} B={frameRect.bottom} (W={frameRect.right - frameRect.left})");
+                        tagRECT fr = _taskbarFrame.CurrentBoundingRectangle;
+                        Serilog.Log.Information("Frame rect: L={l} T={t} R={r} B={b}",
+                            fr.left, fr.top, fr.right, fr.bottom);
                     }
-                    catch (Exception e) { sw.WriteLine($"Frame rect error: {e.Message}"); }
+                    catch (Exception ex) { Serilog.Log.Warning(ex, "frame rect err"); }
 
-                    IUIAutomationElementArray? kids = frame.FindAll(
+                    IUIAutomationElementArray? kids = _taskbarFrame.FindAll(
                         Interop.UIAutomationClient.TreeScope.TreeScope_Children,
-                        uia.CreateTrueCondition());
-                    sw.WriteLine($"Direct children count: {kids.Length}");
+                        _uia.CreateTrueCondition());
+                    Serilog.Log.Information("Direct children count: {c}", kids.Length);
                     for (int i = 0; i < kids.Length; i++)
                     {
                         var k = kids.GetElement(i);
@@ -142,36 +156,23 @@ namespace RoundedTB
                         try { cls = k.CurrentClassName ?? ""; } catch { }
                         try { name = k.CurrentName ?? ""; } catch { }
                         try { rr = k.CurrentBoundingRectangle; } catch { }
-                        sw.WriteLine($"  [{i}] aid='{aid}' cls='{cls}' name='{name}' rect=(L={rr.left},T={rr.top},R={rr.right},B={rr.bottom})");
+                        Serilog.Log.Information(
+                            "  [{i}] aid='{aid}' cls='{cls}' name='{name}' L={l} R={r} ({w}px)",
+                            i, aid, cls, name, rr.left, rr.right, rr.right - rr.left);
                         Marshal.ReleaseComObject(k);
                     }
                     Marshal.ReleaseComObject(kids);
-
-                    // Also list all descendants whose ClassName contains "TaskList"
-                    IUIAutomationCondition cond = uia.CreatePropertyCondition(
-                        UIA_PropertyIds.UIA_ClassNamePropertyId, "Taskbar.TaskListButton");
-                    IUIAutomationElementArray? taskBtns = frame.FindAll(
-                        Interop.UIAutomationClient.TreeScope.TreeScope_Descendants, cond);
-                    sw.WriteLine($"Taskbar.TaskListButton descendants: {taskBtns.Length}");
-                    for (int i = 0; i < taskBtns.Length; i++)
-                    {
-                        var k = taskBtns.GetElement(i);
-                        string aid = ""; string name = ""; tagRECT rr = default;
-                        try { aid = k.CurrentAutomationId ?? ""; } catch { }
-                        try { name = k.CurrentName ?? ""; } catch { }
-                        try { rr = k.CurrentBoundingRectangle; } catch { }
-                        sw.WriteLine($"  [{i}] aid='{aid}' name='{name}' rect=(L={rr.left},R={rr.right})");
-                        Marshal.ReleaseComObject(k);
-                    }
-                    Marshal.ReleaseComObject(taskBtns);
-                    Marshal.ReleaseComObject(cond);
-                    sw.WriteLine();
                 }
-                catch { /* diagnostic must not crash app */ }
+                catch (Exception ex)
+                {
+                    try { Serilog.Log.Warning(ex, "DumpDiagnostic failed"); } catch { }
+                }
             }
 
             public LocalPInvoke.RECT? GetWindowRect()
             {
+                DumpDiagnostic();  // one-shot dump that also logs when _taskbarFrame is null
+
                 if (_taskbarFrame == null || _uia == null)
                 {
                     return null;
@@ -180,8 +181,6 @@ namespace RoundedTB
                 {
                     return null;
                 }
-
-                DumpChildrenDiagnostic(_taskbarFrame, _uia);
 
                 IUIAutomationElementArray? children = null;
                 IUIAutomationElement? child = null;
@@ -213,14 +212,6 @@ namespace RoundedTB
                         }
 
                         tagRECT r = child.CurrentBoundingRectangle;
-                        // Skip zero-size elements (hidden/uninitialized)
-                        if (r.right <= r.left || r.bottom <= r.top)
-                        {
-                            Marshal.ReleaseComObject(child);
-                            child = null;
-                            continue;
-                        }
-
                         if (leftRect == null || r.left < leftRect.Value.left)
                         {
                             leftRect = r;

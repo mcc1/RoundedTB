@@ -654,21 +654,32 @@ namespace RoundedTB
 
         private void CloseMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            // Close any popup windows, but not the main window
-            for (int windowCount = App.Current.Windows.Count - 1; windowCount >= 0; windowCount--)
+            // Close any popup windows, but not the main window.
+            // App.Current / Windows can be null during shutdown; iterate defensively.
+            try
             {
-                var window = App.Current.Windows[windowCount];
-                // Don't close the main window (this window)
-                if (window != this)
+                var app = App.Current;
+                if (app != null && app.Windows != null)
                 {
-                    window.Close();
+                    for (int windowCount = app.Windows.Count - 1; windowCount >= 0; windowCount--)
+                    {
+                        var window = app.Windows[windowCount];
+                        if (window != null && window != this)
+                        {
+                            try { window.Close(); } catch { }
+                        }
+                    }
                 }
             }
+            catch { }
 
             shouldReallyDieNoReally = true;
 
-            // Use the App's shutdown method to ensure proper termination
-            ((App)System.Windows.Application.Current).Shutdown();
+            try
+            {
+                (System.Windows.Application.Current as App)?.Shutdown();
+            }
+            catch { }
         }
 
         public void ShowMenuItem_Click(object sender, RoutedEventArgs e)
