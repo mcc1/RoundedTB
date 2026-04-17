@@ -91,6 +91,24 @@ namespace RoundedTB
                 _taskbarFrame = GetTaskbarFrameElement(_hwndTaskbarMain, _uia);
             }
 
+            // AutomationIds of TaskbarFrame children that are NOT part of the app list.
+            // Filter these out so AppListRect bounds the actual pinned/running app icons,
+            // not the whole TaskbarFrame (which includes Start, Search, Widgets, Tray, Clock).
+            private static readonly HashSet<string> NonAppListAutomationIds = new()
+            {
+                "StartButton",
+                "SearchApp", "SearchBox", "SearchBoxContainer", "SearchIcon", "SearchButton",
+                "ToggleSearchFlyoutButton",
+                "CortanaMicButton",
+                "TaskViewButton", "ShowDesktopButton",
+                "WidgetsButton", "WidgetsIcon", "WidgetsButtonMini",
+                "CopilotIcon", "CopilotButton",
+                "ChatButton",
+                "NotifyIconViewer", "SystemTrayIcon", "ClockButton", "MeetNowButton",
+                "NotificationCenterButton", "ControlCenterButton",
+                "TrayButton", "SystemTrayFrame",
+            };
+
             public LocalPInvoke.RECT? GetWindowRect()
             {
                 if (_taskbarFrame == null || _uia == null)
@@ -120,7 +138,26 @@ namespace RoundedTB
                     for (int i = 0; i < len; i++)
                     {
                         child = children.GetElement(i);
+
+                        // Skip non-app elements (Start, Search, Widgets, Tray, Clock, etc.)
+                        string? automationId = null;
+                        try { automationId = child.CurrentAutomationId; } catch { }
+                        if (automationId != null && NonAppListAutomationIds.Contains(automationId))
+                        {
+                            Marshal.ReleaseComObject(child);
+                            child = null;
+                            continue;
+                        }
+
                         tagRECT r = child.CurrentBoundingRectangle;
+                        // Skip zero-size elements (hidden/uninitialized)
+                        if (r.right <= r.left || r.bottom <= r.top)
+                        {
+                            Marshal.ReleaseComObject(child);
+                            child = null;
+                            continue;
+                        }
+
                         if (leftRect == null || r.left < leftRect.Value.left)
                         {
                             leftRect = r;
