@@ -482,8 +482,14 @@ namespace RoundedTB
             }
             if (isForceReset)
             {
-
-                mainTitleBar.ResetIcon();
+                try
+                {
+                    mainTitleBar.ResetIcon();
+                }
+                catch (Exception ex)
+                {
+                    Log.Debug(ex, "mainTitleBar.ResetIcon threw; safe to ignore (NotifyIcon disabled).");
+                }
             }
         }
 
