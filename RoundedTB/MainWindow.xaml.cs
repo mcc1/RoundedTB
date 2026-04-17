@@ -1160,10 +1160,6 @@ namespace RoundedTB
             IntPtr handle = new WindowInteropHelper(this).Handle;
             source = HwndSource.FromHwnd(handle);
             source.AddHook(interaction.HwndHook);
-            // Intercept WM_CLOSE before WPF routes it through Window.OnClosing.
-            // Cancelling in OnClosing races with WPF's dispatcher shutdown and
-            // can leave the window disposed-but-process-alive (zombie).
-            source.AddHook(CloseButtonHook);
             bool wtf = LocalPInvoke.RegisterHotKey(handle, 9000, 0x8, 0x71);
             Debug.WriteLine("KEY: " + wtf);
             Debug.WriteLine(handle);
@@ -1171,29 +1167,6 @@ namespace RoundedTB
             Debug.WriteLine(System.Windows.Forms.Keys.J.GetHashCode());
             Visibility = Visibility.Hidden;
             Opacity = 1;
-        }
-
-        private IntPtr CloseButtonHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
-        {
-            const int WM_CLOSE = 0x0010;
-            if (msg == WM_CLOSE && !shouldReallyDieNoReally)
-            {
-                // Some close paths (wpfui chrome + system menu) fire WM_CLOSE
-                // several times per click. Only act/log on the first one by
-                // gating on the current visibility; subsequent messages just
-                // swallow themselves.
-                if (IsVisible)
-                {
-                    Log.Debug("WM_CLOSE intercepted; hiding MainWindow instead of closing.");
-                    Visibility = Visibility.Hidden;
-                    if (ShowMenuItem != null)
-                    {
-                        ShowMenuItem.Header = "Show RoundedTB";
-                    }
-                }
-                handled = true;
-            }
-            return IntPtr.Zero;
         }
 
         private void splitHelpButton_Click(object sender, RoutedEventArgs e)
