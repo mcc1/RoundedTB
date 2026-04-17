@@ -305,7 +305,10 @@ namespace RoundedTB
                     int right = Math.Min(taskbar.TaskbarRect.Right - taskbar.TaskbarRect.Left, appListRight + rightMargin + Convert.ToInt32(50 * taskbar.ScaleFactor));
 
                     int top = centredEffectiveRegion.Top;
-                    int bottom = top + centredEffectiveRegion.Height;
+                    // Height field stores the BOTTOM coordinate (taskbarHeight - marginBottom),
+                    // despite being named Height. The previous "top + Height" calc double-added the
+                    // top offset, making the region extend past the taskbar bottom.
+                    int bottom = centredEffectiveRegion.Height;
                     int radius = centredEffectiveRegion.CornerRadius;
 
                     workingRegion = LocalPInvoke.CreateRoundRectRgn(
