@@ -58,14 +58,15 @@ namespace RoundedTB
             // Intercept any direct shutdown calls
             this.Dispatcher.ShutdownStarted += (sender, args) =>
             {
-                Log.Information($"ShutdownStarted event triggered. _allowShutdown: {_allowShutdown}");
-                Log.Information($"Call stack: {Environment.StackTrace}");
                 if (!_allowShutdown)
                 {
-                    Log.Information("Attempting to prevent shutdown - this should not happen!");
-                    // Handle the exception gracefully in our exception handler
+                    // WPF internals sometimes post a shutdown callback when the user clicks X
+                    // on the MainWindow even with ShutdownMode.OnExplicitShutdown. We throw
+                    // and the DispatcherUnhandledException handler swallows it. Quiet log.
+                    Log.Debug("ShutdownStarted with _allowShutdown=false; preventing.");
                     throw new InvalidOperationException("Application shutdown not allowed - main window should stay hidden");
                 }
+                Log.Information("ShutdownStarted (_allowShutdown=true)");
             };
 
             WPFUI.Theme.Watcher.Start();
@@ -75,17 +76,13 @@ namespace RoundedTB
         {
             if (!_allowShutdown)
             {
-                Log.Information("App.OnExit called but shutdown not allowed - this should not happen!");
-                Log.Information($"OnExit call stack: {Environment.StackTrace}");
-                Log.Information("CRITICAL: Something is calling shutdown despite ShutdownMode.OnExplicitShutdown!");
-
-                // Try to prevent the shutdown by keeping the dispatcher alive
-                this.Dispatcher.BeginInvoke(new Action(() => {
-                    Log.Information("Attempting to keep application alive...");
-                    // This might prevent the shutdown from completing
-                }), System.Windows.Threading.DispatcherPriority.Send);
-
-                return; // Don't call base.OnExit to try to prevent shutdown
+                // OnExit fires from WPF plumbing after user clicks X even though
+                // MainWindow.OnClosing cancelled the close. Skip base.OnExit to
+                // keep the app alive. Demoted to Debug - this is expected noise.
+                Log.Debug("OnExit called while _allowShutdown=false; suppressing.");
+                this.Dispatcher.BeginInvoke(new Action(() => { /* keep dispatcher warm */ }),
+                    System.Windows.Threading.DispatcherPriority.Send);
+                return;
             }
 
             Log.Information("App.OnExit called - Application is shutting down");
