@@ -15,7 +15,7 @@
         <Image x:Name="bannerCan" Visibility ="Visible" HorizontalAlignment="Center" Height="146" VerticalAlignment="Top"  Opacity="0.8" Source="res\HeadBannerCan.png" Width="500" Stretch="UniformToFill" Margin="0,-16,0,0"/>
         <Button x:Name="okButton" Content="OK" Margin="0,0,10,10" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="85" Click="okButton_Click" FontWeight="Normal"/>
         <TextBlock x:Name="titleBlock" HorizontalAlignment="Left" Margin="10,35,0,0" TextWrapping="Wrap" Text="Welcome to RoundedTB!" VerticalAlignment="Top" FontWeight="Normal" FontFamily="Segoe UI Semibold" FontSize="36" Opacity="0.795"/>
-        <TextBlock x:Name="subtitleBlock" HorizontalAlignment="Left" Margin="10,85,0,0" TextWrapping="Wrap" Text="Preview 4B(Canary 4.0.0)" VerticalAlignment="Top" FontWeight="Normal" FontFamily="Segoe UI Semibold" FontSize="22" Opacity="0.795" Height="30"/>
+        <TextBlock x:Name="subtitleBlock" HorizontalAlignment="Left" Margin="10,85,0,0" TextWrapping="Wrap" Text="Community Edition v0.2" VerticalAlignment="Top" FontWeight="Normal" FontFamily="Segoe UI Semibold" FontSize="22" Opacity="0.795" Height="30"/>
 
         <TextBlock x:Name="bodyBlockMain" Margin="10,134,10,0" TextWrapping="Wrap" FontWeight="Normal" FontFamily="Segoe UI SemiBold" FontSize="14" Height="37" VerticalAlignment="Top">
             <Bold>Thanks for downloading RoundedTB. Expand the following categories for more information.</Bold>
@@ -26,7 +26,9 @@
                 <Expander x:Name="expander0" HorizontalAlignment="Center" Header="What's new" VerticalAlignment="Top" Width="480" FontSize="16" FontFamily="Segoe UI Semibold">
                     <Grid>
                         <TextBlock Margin="0,5,0,0" x:Name="bodyBlock0" TextWrapping="Wrap" FontWeight="Normal" FontFamily="Segoe UI" FontSize="14" Opacity="0.8" LineHeight="23">
-                    • Nobody knows. Some say secrets lie amongst these builds. And bugs. Honestly, I'm pretty sure they're 90% bug. 95%. 98%. Actually the fact you're even seeing this text is probably a bug. idk tbh, i give up
+                    • Ported to .NET 10 and the built-in WPF Fluent theme (no more WPF-UI dependency).
+                    <LineBreak/>
+                    • Signed MSIX bundle now available from the GitHub Releases page.
                     <LineBreak/>
                     <Bold>REMINDER: Autohide is currently rather buggy and must be entirely disabled in Windows.</Bold>
                     <LineBreak/>
@@ -87,7 +89,7 @@
                     <Grid>
                         <TextBlock Margin="0,5,0,0" x:Name="bodyBlock4" TextWrapping="Wrap" FontWeight="Normal" FontFamily="Segoe UI" FontSize="14" Opacity="0.8" LineHeight="21">
                     • More in-depth instructions, tips and tricks are available in the
-                    <Hyperlink NavigateUri="https://github.com/torchgm/RoundedTB#readme" RequestNavigate="Hyperlink_RequestNavigate">
+                    <Hyperlink NavigateUri="https://github.com/mcc1/RoundedTB#readme" RequestNavigate="Hyperlink_RequestNavigate">
                         README
                     </Hyperlink>.
                     <LineBreak/>
@@ -97,13 +99,13 @@
                     </Hyperlink>.
                     <LineBreak/>
                     • If you want to browse the source code, file an issue or suggest a feature, check out
-                    <Hyperlink NavigateUri="https://github.com/torchgm/RoundedTB" RequestNavigate="Hyperlink_RequestNavigate">
-                        the RoundedTB GitHub repository
+                    <Hyperlink NavigateUri="https://github.com/mcc1/RoundedTB" RequestNavigate="Hyperlink_RequestNavigate">
+                        the RoundedTB Community Edition repository
                     </Hyperlink>.
                     <LineBreak/>
                     <LineBreak/>
                     RoundedTB is licensed under the
-                    <Hyperlink NavigateUri="https://github.com/torchgm/RoundedTB/blob/master/LICENSE" RequestNavigate="Hyperlink_RequestNavigate">
+                    <Hyperlink NavigateUri="https://github.com/mcc1/RoundedTB/blob/master/LICENSE" RequestNavigate="Hyperlink_RequestNavigate">
                         GNU General Public License v3.0
                     </Hyperlink>. By using the software, you agree to accepting the terms of this license.
                     <LineBreak/>
