@@ -21,9 +21,7 @@
     <PackageReference Include="DesktopBridge.Helpers">
       <Version>1.2.1</Version>
     </PackageReference>
-    <PackageReference Include="Hardcodet.NotifyIcon.Wpf">
-      <Version>1.1.0</Version>
-    </PackageReference>
+    <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />
     <PackageReference Include="Interop.UIAutomationClient">
       <Version>10.19041.0</Version>
     </PackageReference>
