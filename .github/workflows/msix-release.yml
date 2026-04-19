@@ -1,0 +1,78 @@
+name: build-msix
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build-msix:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Setup .NET 10
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore
+      run: msbuild RoundedTB.sln /t:Restore /p:Configuration=Release /p:Platform=x64
+
+    - name: Decode signing certificate
+      shell: pwsh
+      run: |
+        $pfxBytes = [Convert]::FromBase64String("${{ secrets.PFX_BASE64 }}")
+        [IO.File]::WriteAllBytes("RoundedTB.pfx", $pfxBytes)
+
+    - name: Build MSIX bundle
+      shell: pwsh
+      run: |
+        msbuild PackagingProject\RoundedTB.Package.wapproj `
+          /p:Configuration=Release `
+          /p:Platform=x64 `
+          /p:AppxBundle=Always `
+          /p:AppxBundlePlatforms=x64 `
+          /p:UapAppxPackageBuildMode=SideloadOnly `
+          /p:AppxPackageSigningEnabled=True `
+          /p:PackageCertificateKeyFile="$((Resolve-Path RoundedTB.pfx).Path)" `
+          /p:PackageCertificatePassword="${{ secrets.PFX_PASSWORD }}"
+
+    - name: Locate output bundle
+      id: find-msix
+      shell: pwsh
+      run: |
+        $bundle = Get-ChildItem -Path PackagingProject\AppPackages -Recurse -Filter "*.msixbundle" | Select-Object -First 1
+        if (-not $bundle) { $bundle = Get-ChildItem -Path PackagingProject\AppPackages -Recurse -Filter "*.appxbundle" | Select-Object -First 1 }
+        if (-not $bundle) { throw "No bundle produced" }
+        echo "path=$($bundle.FullName)" >> $env:GITHUB_OUTPUT
+        echo "name=$($bundle.Name)" >> $env:GITHUB_OUTPUT
+        Write-Host "Found: $($bundle.FullName)"
+
+    - name: Export public certificate for end users
+      shell: pwsh
+      run: |
+        $pwd = ConvertTo-SecureString "${{ secrets.PFX_PASSWORD }}" -Force -AsPlainText
+        $cert = Get-PfxCertificate -FilePath RoundedTB.pfx -Password $pwd
+        Export-Certificate -Cert $cert -FilePath RoundedTB.cer | Out-Null
+
+    - name: Upload MSIX artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: msix-bundle
+        path: |
+          ${{ steps.find-msix.outputs.path }}
+          RoundedTB.cer
+
+    - name: Attach MSIX to release
+      if: github.event_name == 'release'
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          ${{ steps.find-msix.outputs.path }}
+          RoundedTB.cer
