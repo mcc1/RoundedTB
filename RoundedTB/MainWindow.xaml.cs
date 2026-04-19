@@ -104,6 +104,26 @@ namespace RoundedTB
 
             InitializeComponent();
 
+            // wpfui's TitleBar.CloseWindow() calls Application.Current.Shutdown()
+            // when ApplicationNavigation=True, which bypasses OnClosing entirely
+            // (e.Cancel=true won't save us). Replace the close action so the X
+            // button just hides the window.
+            mainTitleBar.CloseActionOverride = (titleBar, parentWindow) =>
+            {
+                try
+                {
+                    Visibility = Visibility.Hidden;
+                    if (ShowMenuItem != null)
+                    {
+                        ShowMenuItem.Header = "Show RoundedTB";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "CloseActionOverride failed to hide window");
+                }
+            };
+
             rectStands = new(
                 new VisiblityControlSet(taskbarRectStandIn, new[] { dynamicCheckBox }),
                 new VisiblityControlSet(trayRectStandIn, new[] { showTrayCheckBox }),
