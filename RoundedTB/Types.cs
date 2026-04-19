@@ -31,6 +31,7 @@ namespace RoundedTB
             public int AppListWidth { get; set; } // Specifies the width of the app list
             public TaskbarEffect TaskbarEffectWindow { get; set; } // Unused clone to apply effects to the taskbar
             public bool IsSecondary { get; set; }
+            public DateTime? HoverStartedAt { get; set; } // When the mouse first entered the reveal strip while hidden; used to delay auto-reveal.
 
             public void Dispose()
             {
@@ -233,6 +234,7 @@ namespace RoundedTB
             public bool FillOnTaskSwitch { get; set; }
             public bool ShowSegmentsOnHover { get; set; }
             public int AutoHide { get; set; }
+            public int HoverRevealDelayMs { get; set; } // 0 = reveal immediately, >0 = hover for this many ms before autohide reveals
         }
 
         public class EffectiveRegion

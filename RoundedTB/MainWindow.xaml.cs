@@ -56,6 +56,7 @@ namespace RoundedTB
         public Background background;
         public Interaction interaction;
         private HwndSource source;
+        private int lastAppliedAutoHide = -1;
         public int selectedSegment = 0; // 0 = Simple, 1 = AppList, 2 = Tray, 3 = Widgets
         /// <summary>
         /// Versions:
@@ -102,6 +103,26 @@ namespace RoundedTB
             WPFUI.Background.Manager.Apply(WPFUI.Background.BackgroundType.Mica, this);
 
             InitializeComponent();
+
+            // wpfui's TitleBar.CloseWindow() calls Application.Current.Shutdown()
+            // when ApplicationNavigation=True, which bypasses OnClosing entirely
+            // (e.Cancel=true won't save us). Replace the close action so the X
+            // button just hides the window.
+            mainTitleBar.CloseActionOverride = (titleBar, parentWindow) =>
+            {
+                try
+                {
+                    Visibility = Visibility.Hidden;
+                    if (ShowMenuItem != null)
+                    {
+                        ShowMenuItem.Header = "Show RoundedTB";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "CloseActionOverride failed to hide window");
+                }
+            };
 
             rectStands = new(
                 new VisiblityControlSet(taskbarRectStandIn, new[] { dynamicCheckBox }),
@@ -203,7 +224,8 @@ namespace RoundedTB
                         FillOnMaximise = true,
                         FillOnTaskSwitch = true,
                         ShowSegmentsOnHover = false,
-                        AutoHide = 0
+                        AutoHide = 0,
+                        HoverRevealDelayMs = 1000
                     };
                 }
                 else // Default settings for Windows 10
@@ -227,7 +249,8 @@ namespace RoundedTB
                         FillOnMaximise = true,
                         FillOnTaskSwitch = false,
                         ShowSegmentsOnHover = false,
-                        AutoHide = 0
+                        AutoHide = 0,
+                        HoverRevealDelayMs = 1000
                     };
                 }
             }
@@ -322,6 +345,8 @@ namespace RoundedTB
             showSegmentsOnHoverCheckBox.IsChecked = activeSettings.ShowSegmentsOnHover;
             compositionFixCheckBox.IsChecked = activeSettings.CompositionCompat;
             autoHideComboBox.SelectedIndex = activeSettings.AutoHide;
+            hoverDelaySlider.Value = activeSettings.HoverRevealDelayMs;
+            hoverDelayInput.Text = activeSettings.HoverRevealDelayMs.ToString();
             widgetWidthInput.Text = activeSettings.WidgetsWidth.ToString();
             clockWidthInput.Text = activeSettings.ClockWidth.ToString();
             taskbarDetails = Taskbar.GenerateTaskbarInfo(isWindows11);
@@ -361,8 +386,6 @@ namespace RoundedTB
                 }
                 ShowMenuItem.Header = "Hide RoundedTB";
             }
-
-            AutoHide(true, taskbarDetails);
 
             UpdateUi();
 
@@ -425,7 +448,16 @@ namespace RoundedTB
                 {
                     LocalPInvoke.RECT workArea = display.MonitorArea;
                     workArea.Bottom = workArea.Bottom - 2;
-                    Interaction.SetWorkspace(workArea);
+                    // Skip if current work area already matches; SPIF_SENDWININICHANGE
+                    // broadcasts a WM_SETTINGCHANGE that re-flows open windows, which
+                    // the user sees as foreground apps being pulled upward on startup.
+                    if (display.WorkArea.Left != workArea.Left
+                        || display.WorkArea.Top != workArea.Top
+                        || display.WorkArea.Right != workArea.Right
+                        || display.WorkArea.Bottom != workArea.Bottom)
+                    {
+                        Interaction.SetWorkspace(workArea);
+                    }
                 }
                 foreach (Types.Taskbar taskbar in taskbarDetails)
                 {
@@ -477,11 +509,9 @@ namespace RoundedTB
                         new System.Windows.Media.Imaging.BitmapImage(resDark));
                 }
             }
-            if (isForceReset)
-            {
-
-                mainTitleBar.ResetIcon();
-            }
+            // Do not call mainTitleBar.ResetIcon(): wpfui's ResetIcon unconditionally creates
+            // a NotifyIcon even when UseNotifyIcon=false, producing a ghost tray entry alongside
+            // our real Hardcodet _trayIcon. The theme-aware icon swap above is disabled anyway.
         }
 
         public bool IsThemeLightMode()
@@ -537,6 +567,7 @@ namespace RoundedTB
             activeSettings.ClockWidth = clockWidth;
 
             activeSettings.AutoHide = autoHideComboBox.SelectedIndex;
+            activeSettings.HoverRevealDelayMs = Convert.ToInt32(Math.Round(hoverDelaySlider.Value));
             activeSettings.IsDynamic = (bool)dynamicCheckBox.IsChecked;
             activeSettings.IsCentred = Taskbar.CheckIfCentred();
             activeSettings.ShowTray = (bool)showTrayCheckBox.IsChecked;
@@ -583,13 +614,17 @@ namespace RoundedTB
                 taskbarThread.RunWorkerAsync((mt, ml, mb, mr, 0));
             }
 
-            if (activeSettings.AutoHide < 1)
+            if (lastAppliedAutoHide != activeSettings.AutoHide)
             {
-                AutoHide(false, taskbarDetails);
-            }
-            else
-            {
-                AutoHide(true, taskbarDetails);
+                if (activeSettings.AutoHide < 1)
+                {
+                    AutoHide(false, taskbarDetails);
+                }
+                else
+                {
+                    AutoHide(true, taskbarDetails);
+                }
+                lastAppliedAutoHide = activeSettings.AutoHide;
             }
             interaction.WriteJSON();
             TrayIconCheck(isForceReset: true);
@@ -1422,6 +1457,29 @@ namespace RoundedTB
         private void cornerRadiusSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             cornerRadiusInput.Text = Math.Round(cornerRadiusSlider.Value).ToString();
+        }
+
+        private void hoverDelaySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (hoverDelayInput != null)
+            {
+                hoverDelayInput.Text = Math.Round(hoverDelaySlider.Value).ToString();
+            }
+        }
+
+        private void hoverDelayInput_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (int.TryParse(hoverDelayInput.Text, out int ms))
+            {
+                if (ms < hoverDelaySlider.Minimum) ms = (int)hoverDelaySlider.Minimum;
+                if (ms > hoverDelaySlider.Maximum) ms = (int)hoverDelaySlider.Maximum;
+                hoverDelayInput.Text = ms.ToString();
+                hoverDelaySlider.Value = ms;
+            }
+            else
+            {
+                hoverDelayInput.Text = Math.Round(hoverDelaySlider.Value).ToString();
+            }
         }
     }
 }
