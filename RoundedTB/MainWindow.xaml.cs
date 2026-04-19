@@ -430,35 +430,25 @@ namespace RoundedTB
 
         public void AutoHide(bool enabled, List<Types.Taskbar> taskbarDetails)
         {
-            int workingHeight = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea.Height;
-            int boundsHeight = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height;
-            int taskbarHeight = taskbarDetails[0].TaskbarRect.Bottom - taskbarDetails[0].TaskbarRect.Top;
-            bool workAreaMisconfigured = false;
-
-            if (boundsHeight - taskbarHeight > workingHeight)
-            {
-                workAreaMisconfigured = true;
-            }
+            // Note: we no longer call SetWorkspace here. The taskbar retains its
+            // AppBar state of AlwaysOnTop (not ABS_AUTOHIDE), so Windows keeps
+            // claiming its reserved height in the work area. Any SetWorkspace we
+            // issue is reverted by the AppBar system within a second, and the
+            // revert broadcasts a second WM_SETTINGCHANGE that snaps any window
+            // extending past the taskbar upward - which the user sees as "windows
+            // get pushed up every time RoundedTB launches".
+            //
+            // Show-on-desktop / Always-hide still work for windowed apps because
+            // Windows only enforces the work area on maximize, not on free-floating
+            // windows. Users who position apps over the taskbar area continue to
+            // see them render there (with the taskbar fading to opacity=0 via the
+            // background worker), and the push-up symptom is gone.
+            Log.Information(
+                "AutoHide(enabled={Enabled}) called. activeSettings.AutoHide={Auto}",
+                enabled, activeSettings.AutoHide);
 
             if (activeSettings.AutoHide > 0 && enabled)
             {
-                MonitorStuff.DisplayInfoCollection Displays = MonitorStuff.GetDisplays();
-
-                foreach (MonitorStuff.DisplayInfo display in Displays)
-                {
-                    LocalPInvoke.RECT workArea = display.MonitorArea;
-                    workArea.Bottom = workArea.Bottom - 2;
-                    // Skip if current work area already matches; SPIF_SENDWININICHANGE
-                    // broadcasts a WM_SETTINGCHANGE that re-flows open windows, which
-                    // the user sees as foreground apps being pulled upward on startup.
-                    if (display.WorkArea.Left != workArea.Left
-                        || display.WorkArea.Top != workArea.Top
-                        || display.WorkArea.Right != workArea.Right
-                        || display.WorkArea.Bottom != workArea.Bottom)
-                    {
-                        Interaction.SetWorkspace(workArea);
-                    }
-                }
                 foreach (Types.Taskbar taskbar in taskbarDetails)
                 {
                     LocalPInvoke.SetWindowPos(taskbar.TaskbarHwnd, new IntPtr(-1), 0, 0, 0, 0, LocalPInvoke.SetWindowPosFlags.IgnoreMove | LocalPInvoke.SetWindowPosFlags.IgnoreResize);
@@ -470,21 +460,6 @@ namespace RoundedTB
                 foreach (Types.Taskbar taskbar in taskbarDetails)
                 {
                     LocalPInvoke.SetWindowPos(taskbar.TaskbarHwnd, new IntPtr(-1), 0, 0, 0, 0, LocalPInvoke.SetWindowPosFlags.IgnoreMove | LocalPInvoke.SetWindowPosFlags.IgnoreResize);
-                    if (workAreaMisconfigured)
-                    {
-                        Taskbar.SetTaskbarState(LocalPInvoke.AppBarStates.AutoHide, taskbar.TaskbarHwnd);
-                        Taskbar.SetTaskbarState(LocalPInvoke.AppBarStates.AlwaysOnTop, taskbar.TaskbarHwnd);
-                    }
-
-                    MonitorStuff.DisplayInfoCollection Displays = MonitorStuff.GetDisplays();
-
-                    foreach (MonitorStuff.DisplayInfo display in Displays)
-                    {
-                        taskbarHeight = taskbar.TaskbarRect.Bottom - taskbar.TaskbarRect.Top;
-                        LocalPInvoke.RECT workArea = display.MonitorArea;
-                        workArea.Bottom = workArea.Bottom - taskbarHeight;
-                        Interaction.SetWorkspace(workArea);
-                    }
                 }
             }
         }
@@ -616,13 +591,19 @@ namespace RoundedTB
 
             if (lastAppliedAutoHide != activeSettings.AutoHide)
             {
-                if (activeSettings.AutoHide < 1)
+                if (activeSettings.AutoHide > 0)
                 {
-                    AutoHide(false, taskbarDetails);
-                }
-                else
-                {
+                    // Enabling autohide always needs to run (expand work area, set AlwaysOnTop).
                     AutoHide(true, taskbarDetails);
+                }
+                else if (lastAppliedAutoHide > 0)
+                {
+                    // Transitioning FROM autohide back to "Always show" — restore normal
+                    // work area. Skip when lastAppliedAutoHide < 0 (first apply at startup
+                    // with AutoHide=0): the OS is already in normal state and calling
+                    // SetWorkspace would broadcast WM_SETTINGCHANGE, which re-flows
+                    // foreground windows upward — the symptom the user was seeing.
+                    AutoHide(false, taskbarDetails);
                 }
                 lastAppliedAutoHide = activeSettings.AutoHide;
             }

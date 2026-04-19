@@ -146,6 +146,9 @@ namespace RoundedTB
 
         public static bool SetWorkspace(LocalPInvoke.RECT rect)
         {
+            Serilog.Log.Information(
+                "SetWorkspace called: L={Left} T={Top} R={Right} B={Bottom}",
+                rect.Left, rect.Top, rect.Right, rect.Bottom);
             bool result = LocalPInvoke.SystemParametersInfo(LocalPInvoke.SPI_SETWORKAREA, 0, ref rect, LocalPInvoke.SPIF_change);
             if (!result)
             {
