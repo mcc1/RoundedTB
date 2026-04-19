@@ -509,17 +509,9 @@ namespace RoundedTB
                         new System.Windows.Media.Imaging.BitmapImage(resDark));
                 }
             }
-            if (isForceReset)
-            {
-                try
-                {
-                    mainTitleBar.ResetIcon();
-                }
-                catch (Exception ex)
-                {
-                    Log.Debug(ex, "mainTitleBar.ResetIcon threw; safe to ignore (NotifyIcon disabled).");
-                }
-            }
+            // Do not call mainTitleBar.ResetIcon(): wpfui's ResetIcon unconditionally creates
+            // a NotifyIcon even when UseNotifyIcon=false, producing a ghost tray entry alongside
+            // our real Hardcodet _trayIcon. The theme-aware icon swap above is disabled anyway.
         }
 
         public bool IsThemeLightMode()
