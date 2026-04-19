@@ -62,18 +62,52 @@ jobs:
         $cert = Get-PfxCertificate -FilePath RoundedTB.pfx -Password $pwd
         Export-Certificate -Cert $cert -FilePath RoundedTB.cer | Out-Null
 
+    - name: Stage release files
+      id: stage
+      shell: pwsh
+      run: |
+        $stage = Join-Path $env:RUNNER_TEMP "release"
+        New-Item -ItemType Directory -Force -Path $stage | Out-Null
+        Copy-Item "${{ steps.find-msix.outputs.path }}" $stage
+        Copy-Item "RoundedTB.cer" $stage
+        $install = @'
+        RoundedTB MSIX - Installation Guide
+        ====================================
+
+        This build is signed with a self-signed certificate, so Windows
+        will refuse to install the .msixbundle until you trust the
+        certificate (RoundedTB.cer). You only need to do this once.
+
+        --- Option A: GUI ---
+        1. Right-click RoundedTB.cer -> Install Certificate.
+        2. Store Location: Local Machine (requires admin). Click Next.
+        3. Choose "Place all certificates in the following store",
+           click Browse, pick "Trusted People", then Next -> Finish.
+        4. Double-click RoundedTB.Package_*.msixbundle to install.
+
+        --- Option B: PowerShell (run as Administrator) ---
+          Import-Certificate -FilePath .\RoundedTB.cer `
+            -CertStoreLocation Cert:\LocalMachine\TrustedPeople
+          Add-AppxPackage .\RoundedTB.Package_2.0.0.0_x64.msixbundle
+
+        --- Uninstall ---
+        Settings -> Apps -> Installed apps -> RoundedTB -> Uninstall.
+        To remove the trust:
+          Get-ChildItem Cert:\LocalMachine\TrustedPeople `
+            | Where-Object Subject -eq "CN=ChihChung Ma" `
+            | Remove-Item
+        '@
+        Set-Content -Path (Join-Path $stage "INSTALL.txt") -Value $install -Encoding UTF8
+        echo "dir=$stage" >> $env:GITHUB_OUTPUT
+
     - name: Upload MSIX artifact
       uses: actions/upload-artifact@v4
       with:
-        name: msix-bundle
-        path: |
-          ${{ steps.find-msix.outputs.path }}
-          RoundedTB.cer
+        name: RoundedTB-MSIX
+        path: ${{ steps.stage.outputs.dir }}/*
 
     - name: Attach MSIX to release
       if: github.event_name == 'release'
       uses: softprops/action-gh-release@v2
       with:
-        files: |
-          ${{ steps.find-msix.outputs.path }}
-          RoundedTB.cer
+        files: ${{ steps.stage.outputs.dir }}/*
