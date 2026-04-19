@@ -8,7 +8,7 @@
         xmlns:wpfui="clr-namespace:WPFUI.Controls;assembly=WPFUI"
         mc:Ignorable="d"
         Style="{StaticResource UiWindow}"
-        Title="RoundedTB" Height="458" Width="718"
+        Title="RoundedTB" Height="485" Width="718"
         Background="#20808080"
         d:Background="DarkGray"
         Visibility = "Visible"
@@ -173,16 +173,22 @@
             <wpfui:Button x:Name="aboutButton" Appearance="Secondary" Margin="0,0,10,47" VerticalAlignment="Bottom" Content="Help" Click="aboutButton_Click" FontWeight="Normal" HorizontalAlignment="Right" Width="133" Height="31"/>
             <wpfui:Button x:Name="applyButton" Margin="0,0,10,10" VerticalAlignment="Bottom" Content="Apply" Click="ApplyButton_Click" FontWeight="Normal" HorizontalAlignment="Right" Width="133" Height="32"/>
 
-            <Grid Width="202" Margin="0,190,10,0"   VerticalAlignment="Top" HorizontalAlignment="Right" >
+            <Grid Width="202" Margin="0,190,10,0" HorizontalAlignment="Right" VerticalAlignment="Top" Height="55">
+                <Label x:Name="hoverDelayLabel" Content="Hover reveal (ms)" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <TextBox x:Name="hoverDelayInput" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" HorizontalAlignment="Left" Width="94" Margin="108,19,0,0" LostFocus="hoverDelayInput_LostFocus"/>
+                <Slider x:Name="hoverDelaySlider" Height="10" VerticalAlignment="Top" HorizontalAlignment="Left" Width="84" LargeChange="100" SmallChange="50" Focusable="False" Maximum="1000" Minimum="0" Orientation="Horizontal" ValueChanged="hoverDelaySlider_ValueChanged" Margin="0,25,0,0"/>
+            </Grid>
+
+            <Grid Width="202" Margin="0,252,10,0"   VerticalAlignment="Top" HorizontalAlignment="Right" Height="25">
                 <Label x:Name="widgetWidthLabel" Content="Width" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,0,0" Width="60"  Visibility="Hidden" />
                 <TextBox x:Name="widgetWidthInput" HorizontalAlignment="Left" Margin="0,17,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" Width="60"  Visibility="Hidden" />
                 <Label x:Name="clockWidthLabel" Content="Width" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,0,0" Width="60"  Visibility="Hidden" />
                 <TextBox x:Name="clockWidthInput" HorizontalAlignment="Left" Margin="0,17,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" Width="60"  Visibility="Hidden" />
 
-                <CheckBox x:Name="dynamicCheckBox" Content="Dynamic mode" Margin="70,12,0,0" Padding="0" Checked="dynamicCheckBox_Checked" Unchecked="dynamicCheckBox_Unchecked"  RenderTransformOrigin="1.763,4.069" Visibility="Visible"  Width="116" HorizontalAlignment="Left" />
-                <CheckBox x:Name="showTrayCheckBox" Content="Show tray" Margin="70,12,0,0" Padding="0" Visibility="Hidden" HorizontalAlignment="Left" />
-                <CheckBox x:Name="showWidgetsCheckBox" Content="Show widget"  Margin="70,12,0,0" Padding="0" Visibility="Hidden" HorizontalAlignment="Left" />
-                <CheckBox x:Name="showClockCheckBox" Content="Show clock"  Margin="70,12,0,0" Padding="0" Visibility="Hidden" HorizontalAlignment="Left" />
+                <CheckBox x:Name="dynamicCheckBox" Content="Dynamic mode" Margin="52,2,0,0" Padding="0" Checked="dynamicCheckBox_Checked" Unchecked="dynamicCheckBox_Unchecked"  RenderTransformOrigin="1.763,4.069" Visibility="Visible"  Width="140" HorizontalAlignment="Left" />
+                <CheckBox x:Name="showTrayCheckBox" Content="Show tray" Margin="70,2,0,0" Padding="0" Visibility="Hidden" HorizontalAlignment="Left" />
+                <CheckBox x:Name="showWidgetsCheckBox" Content="Show widget"  Margin="70,2,0,0" Padding="0" Visibility="Hidden" HorizontalAlignment="Left" />
+                <CheckBox x:Name="showClockCheckBox" Content="Show clock"  Margin="70,2,0,0" Padding="0" Visibility="Hidden" HorizontalAlignment="Left" />
             </Grid>
 
             <CheckBox x:Name="centredCheckBox" Content="Centred taskbar?" Margin="10,62,0,0" VerticalAlignment="Top" Visibility="Hidden"/>
@@ -210,7 +216,7 @@
             
             </Grid>
 
-            <Grid x:Name="tbDiagramGrid" Margin="10,0,0,0" Height="247" VerticalAlignment="Top" HorizontalAlignment="Left" Width="486">
+            <Grid x:Name="tbDiagramGrid" Margin="10,0,0,0" Height="278" VerticalAlignment="Top" HorizontalAlignment="Left" Width="486">
                 <Rectangle Stroke="#30242424" Fill="#20808080" RadiusX="5" RadiusY="5"/>
                 <wpfui:Button x:Name="taskbarRectStandIn" Margin="126,0,126,5" VerticalAlignment="Bottom" Click="taskbarRectStandIn_Click" Appearance="Primary" Height="32"></wpfui:Button>
                 <wpfui:Button x:Name="trayRectStandIn" Margin="415,0,5,5" Click="trayRectStandIn_Click" VerticalAlignment="Bottom" Height="32" Appearance="Secondary" Padding="0">📅</wpfui:Button>
@@ -221,18 +227,15 @@
                 <Label Content="To begin, select a taskbar segment below." HorizontalAlignment="Center" Margin="0,138,0,75" FontFamily="Segoe UI Variable Display" FontWeight="SemiBold" FontSize="20" Opacity="0.75"/>
             </Grid>
 
-            <Grid Margin="0,0,10,83" HorizontalAlignment="Right" Width="202" Height="105" VerticalAlignment="Bottom">
+            <Grid Margin="0,0,10,83" HorizontalAlignment="Right" Width="133" Height="50" VerticalAlignment="Bottom">
                 <Label Content="Auto-hide" Height="20" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                 <ComboBox x:Name="autoHideComboBox" Margin="0,18,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="133">
                     <ComboBoxItem>Always show</ComboBoxItem>
                     <ComboBoxItem>Always hide</ComboBoxItem>
                     <ComboBoxItem>Show on desktop</ComboBoxItem>
                 </ComboBox>
-                <Label x:Name="hoverDelayLabel" Content="Hover reveal (ms)" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,55,0,0"/>
-                <TextBox x:Name="hoverDelayInput" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" HorizontalAlignment="Left" Width="94" Margin="108,74,0,0" LostFocus="hoverDelayInput_LostFocus"/>
-                <Slider x:Name="hoverDelaySlider" Height="10" VerticalAlignment="Top" HorizontalAlignment="Left" Width="84" LargeChange="100" SmallChange="50" Focusable="False" Maximum="1000" Minimum="0" Orientation="Horizontal" ValueChanged="hoverDelaySlider_ValueChanged" Margin="0,85,0,0"/>
             </Grid>
-            <Rectangle HorizontalAlignment="Center" Margin="0,262,0,0" Stroke="#4C909090" Width="698" RadiusX="1" RadiusY="1.5" Height="1" VerticalAlignment="Top"/>
+            <Rectangle HorizontalAlignment="Center" Margin="0,280,0,0" Stroke="#4C909090" Width="698" RadiusX="1" RadiusY="1.5" Height="1" VerticalAlignment="Top"/>
 
         </Grid>
     </Grid>
