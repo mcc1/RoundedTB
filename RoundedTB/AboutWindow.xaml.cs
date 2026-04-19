@@ -24,6 +24,25 @@ namespace RoundedTB
         public AboutWindow()
         {
             InitializeComponent();
+
+            Icon = new BitmapImage(new Uri(Branding.IconResourcePath));
+
+            // The three banners start Hidden/Hidden/Visible in XAML; show the one that
+            // matches the build variant so About's hero image matches the titlebar icon.
+            // Using #if avoids CS0162 warnings from a switch over a const.
+            bannerMst.Visibility = Visibility.Hidden;
+            bannerDev.Visibility = Visibility.Hidden;
+            bannerCan.Visibility = Visibility.Hidden;
+#if DEBUG
+            bannerDev.Visibility = Visibility.Visible;
+            subtitleBlock.Text = "Community Edition (Dev build)";
+#elif RTB_RELEASE
+            bannerMst.Visibility = Visibility.Visible;
+            subtitleBlock.Text = "Community Edition v0.2";
+#else
+            bannerCan.Visibility = Visibility.Visible;
+            subtitleBlock.Text = "Community Edition (Canary)";
+#endif
         }
 
         private void okButton_Click(object sender, RoutedEventArgs e)

@@ -22,7 +22,7 @@ jobs:
         dotnet-version: '10.0.x'
 
     - name: Restore
-      run: msbuild RoundedTB.sln /t:Restore /p:Configuration=Release /p:Platform=x64 /p:TargetPlatformVersion=10.0.26100.0
+      run: msbuild RoundedTB.sln /t:Restore /p:Configuration=Release /p:Platform=x64 /p:TargetPlatformVersion=10.0.26100.0 /p:RTB_RELEASE=${{ github.event_name == 'release' }}
 
     - name: Decode signing certificate
       shell: pwsh
@@ -41,6 +41,7 @@ jobs:
           /p:UapAppxPackageBuildMode=SideloadOnly `
           /p:AppxPackageSigningEnabled=True `
           /p:TargetPlatformVersion=10.0.26100.0 `
+          /p:RTB_RELEASE=${{ github.event_name == 'release' }} `
           /p:PackageCertificateKeyFile="$((Resolve-Path RoundedTB.pfx).Path)" `
           /p:PackageCertificatePassword="${{ secrets.PFX_PASSWORD }}"
 

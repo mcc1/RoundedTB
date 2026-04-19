@@ -16,6 +16,7 @@ using System.Diagnostics;
 using Microsoft.Win32;
 using System.Text;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using DrawingIcon = System.Drawing.Icon;
 using Hardcodet.Wpf.TaskbarNotification;
 using System.Linq;
@@ -100,6 +101,8 @@ namespace RoundedTB
         public MainWindow()
         {
             InitializeComponent();
+
+            Icon = new BitmapImage(new Uri(Branding.IconResourcePath));
 
             rectStands = new(
                 new VisiblityControlSet(taskbarRectStandIn, new[] { dynamicCheckBox }),
@@ -713,7 +716,7 @@ namespace RoundedTB
         {
             try
             {
-                var streamInfo = System.Windows.Application.GetResourceStream(new Uri("pack://application:,,,/RoundedTBCanary.ico"));
+                var streamInfo = System.Windows.Application.GetResourceStream(new Uri(Branding.IconResourcePath));
                 if (streamInfo != null)
                 {
                     return new DrawingIcon(streamInfo.Stream);

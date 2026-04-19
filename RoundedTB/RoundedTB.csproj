@@ -8,8 +8,20 @@
     <UseWPF>true</UseWPF>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
   </PropertyGroup>
+  <!--
+    Build-variant branding. Pass /p:RTB_RELEASE=true for the official GitHub
+    release build so ApplicationIcon and the RTB_RELEASE compile constant both
+    switch to the "stable" variant; leave it unset for Canary (CI artifacts,
+    local Release). Debug configuration always uses the Dev icon.
+  -->
   <PropertyGroup>
-    <ApplicationIcon>RoundedTBCanary.ico</ApplicationIcon>
+    <RtbIconVariant Condition="'$(Configuration)' == 'Debug'">Dev</RtbIconVariant>
+    <RtbIconVariant Condition="'$(Configuration)' != 'Debug' and '$(RTB_RELEASE)' != 'true'">Canary</RtbIconVariant>
+    <RtbIconVariant Condition="'$(Configuration)' != 'Debug' and '$(RTB_RELEASE)' == 'true'"></RtbIconVariant>
+    <ApplicationIcon>RoundedTB$(RtbIconVariant).ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(RTB_RELEASE)' == 'true'">
+    <DefineConstants>$(DefineConstants);RTB_RELEASE</DefineConstants>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>

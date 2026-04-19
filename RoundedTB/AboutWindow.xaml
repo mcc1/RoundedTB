@@ -6,7 +6,6 @@
         xmlns:local="clr-namespace:RoundedTB"
         mc:Ignorable="d"
         Title="RoundedTB - About" Height="616" Width="500"
-        Icon="pack://application:,,,/RoundedTBCanary.ico"
         Visibility ="Visible" ResizeMode="NoResize" Opacity="1.001">
     <Grid>
 

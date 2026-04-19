@@ -161,8 +161,11 @@ namespace RoundedTB
                     Log.Debug($"Failed to load icon from executable: {ex.Message}");
                 }
 
-                // Try to load the app icon from resources - try multiple possible paths
+                // Try to load the app icon from resources - try multiple possible paths.
+                // Primary path is the build-variant icon (Dev/Canary/Release); others are
+                // fallbacks in case the variant resource is missing for any reason.
                 string[] iconPaths = {
+                    Branding.IconResourcePath,
                     "pack://application:,,,/RoundedTB.ico",
                     "pack://application:,,,/RoundedTBCanary.ico",
                     "pack://application:,,,/res/TrayDark.ico"

@@ -41,7 +41,6 @@ namespace RoundedTB
                 return _mw;
             }
         }
-        string m = "";
 
         public Interaction()
         {

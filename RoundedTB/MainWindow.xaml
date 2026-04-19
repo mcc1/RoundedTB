@@ -8,7 +8,6 @@
         mc:Ignorable="d"
         Title="RoundedTB - Configuration" Height="510" Width="760"
         FontSize="12"
-        Icon="pack://application:,,,/RoundedTBCanary.ico"
         d:Background="DarkGray"
         Visibility = "Visible"
         Opacity="0.001"
