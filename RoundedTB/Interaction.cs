@@ -303,24 +303,6 @@ namespace RoundedTB
             return true;
         }
 
-        public void RefreshUiTray(bool isForceReset)
-        {
-            // When the taskbar changes, there may be not show tray icons. so need for a redraw.
-            mw.Dispatcher.Invoke(() =>
-            {
-                try
-                {
-                    mw.TrayIconCheck(isForceReset);
-
-                }
-                catch (Exception)
-                {
-                    // TODO: write log
-                    // GUI refresh, gracefully handle errors.
-                }
-            });
-        }
-
         public enum TaskbarPosition
         {
             Unknown = -1,

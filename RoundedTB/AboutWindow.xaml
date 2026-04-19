@@ -4,11 +4,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:RoundedTB"
-        xmlns:wpfui="clr-namespace:WPFUI.Controls;assembly=WPFUI"
         mc:Ignorable="d"
-        Style="{StaticResource UiWindow}"
-        Background="#20808080"
         Title="RoundedTB - About" Height="616" Width="500"
+        Icon="pack://application:,,,/RoundedTBCanary.ico"
         Visibility ="Visible" ResizeMode="NoResize" Opacity="1.001">
     <Grid>
 
@@ -18,9 +16,6 @@
         <Button x:Name="okButton" Content="OK" Margin="0,0,10,10" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="85" Click="okButton_Click" FontWeight="Normal"/>
         <TextBlock x:Name="titleBlock" HorizontalAlignment="Left" Margin="10,35,0,0" TextWrapping="Wrap" Text="Welcome to RoundedTB!" VerticalAlignment="Top" FontWeight="Normal" FontFamily="Segoe UI Semibold" FontSize="36" Opacity="0.795"/>
         <TextBlock x:Name="subtitleBlock" HorizontalAlignment="Left" Margin="10,85,0,0" TextWrapping="Wrap" Text="Preview 4B(Canary 4.0.0)" VerticalAlignment="Top" FontWeight="Normal" FontFamily="Segoe UI Semibold" FontSize="22" Opacity="0.795" Height="30"/>
-
-        <wpfui:TitleBar x:Name="aboutTitleBar" Grid.Row="0" NotifyIconTooltip="RoundedTB" ApplicationNavigation="True" Title="RoundedTB - About" Icon="pack://application:,,,/RoundedTBCanary.ico" Height="51" ShowMaximize="False"/>
-
 
         <TextBlock x:Name="bodyBlockMain" Margin="10,134,10,0" TextWrapping="Wrap" FontWeight="Normal" FontFamily="Segoe UI SemiBold" FontSize="14" Height="37" VerticalAlignment="Top">
             <Bold>Thanks for downloading RoundedTB. Expand the following categories for more information.</Bold>

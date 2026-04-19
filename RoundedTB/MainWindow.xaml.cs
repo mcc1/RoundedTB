@@ -15,7 +15,6 @@ using Windows.ApplicationModel;
 using System.Diagnostics;
 using Microsoft.Win32;
 using System.Text;
-using WPFUI;
 using System.Windows.Media;
 using DrawingIcon = System.Drawing.Icon;
 using Hardcodet.Wpf.TaskbarNotification;
@@ -71,7 +70,7 @@ namespace RoundedTB
 
         private VisiblityControlManager rectStands;
 
-        record VisiblityControlSet(WPFUI.Controls.Button KeyControl, IList<System.Windows.Controls.Control> FollowingControls);
+        record VisiblityControlSet(System.Windows.Controls.Button KeyControl, IList<System.Windows.Controls.Control> FollowingControls);
 
         record VisiblityControlManager(VisiblityControlSet CenterBar, VisiblityControlSet TaskTray, VisiblityControlSet Widgets, VisiblityControlSet Clock)
         {
@@ -81,7 +80,7 @@ namespace RoundedTB
 
             internal void Focus(VisiblityControlSet set)
             {
-                set.KeyControl.Appearance = WPFUI.Common.Appearance.Primary;
+                set.KeyControl.Style = set.KeyControl.TryFindResource("AccentButtonStyle") as Style;
                 foreach (var c in set.FollowingControls)
                 {
                     c.Visibility = Visibility.Visible;
@@ -89,7 +88,7 @@ namespace RoundedTB
 
                 All.Except(new[] { set }).ForEach(x =>
                 {
-                    x.KeyControl.Appearance = WPFUI.Common.Appearance.Secondary;
+                    x.KeyControl.ClearValue(System.Windows.Controls.Button.StyleProperty);
                     foreach (var c in x.FollowingControls)
                     {
                         c.Visibility = Visibility.Hidden;
@@ -100,29 +99,7 @@ namespace RoundedTB
 
         public MainWindow()
         {
-            WPFUI.Background.Manager.Apply(WPFUI.Background.BackgroundType.Mica, this);
-
             InitializeComponent();
-
-            // wpfui's TitleBar.CloseWindow() calls Application.Current.Shutdown()
-            // when ApplicationNavigation=True, which bypasses OnClosing entirely
-            // (e.Cancel=true won't save us). Replace the close action so the X
-            // button just hides the window.
-            mainTitleBar.CloseActionOverride = (titleBar, parentWindow) =>
-            {
-                try
-                {
-                    Visibility = Visibility.Hidden;
-                    if (ShowMenuItem != null)
-                    {
-                        ShowMenuItem.Header = "Show RoundedTB";
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Warning(ex, "CloseActionOverride failed to hide window");
-                }
-            };
 
             rectStands = new(
                 new VisiblityControlSet(taskbarRectStandIn, new[] { dynamicCheckBox }),
@@ -156,7 +133,6 @@ namespace RoundedTB
             interaction.SetMainWindow(this);
 
             // Note: Single instance detection is now handled in App.xaml.cs using Mutex
-            TrayIconCheck(isForceReset: true);
             SetupTrayIcon();
 
             if (IsRunningAsUWP())
@@ -464,54 +440,6 @@ namespace RoundedTB
             }
         }
 
-        public void TrayIconCheck(bool isForceReset)
-        {
-            Uri resLight = new("pack://application:,,,/res/traylight.ico");
-            Uri resDark = new("pack://application:,,,/res/traydark.ico");
-
-            if (false)
-            {
-                // TODO: Show system theme mode icon.
-                bool cuurentIsLightMode = IsThemeLightMode();
-                if (cuurentIsLightMode)
-                {
-                    mainTitleBar.NotifyIconImage = System.Windows.Media.Imaging.BitmapFrame.Create(
-                        new System.Windows.Media.Imaging.BitmapImage(resLight));
-                }
-                else
-                {
-                    mainTitleBar.NotifyIconImage = System.Windows.Media.Imaging.BitmapFrame.Create(
-                        new System.Windows.Media.Imaging.BitmapImage(resDark));
-                }
-            }
-            // Do not call mainTitleBar.ResetIcon(): wpfui's ResetIcon unconditionally creates
-            // a NotifyIcon even when UseNotifyIcon=false, producing a ghost tray entry alongside
-            // our real Hardcodet _trayIcon. The theme-aware icon swap above is disabled anyway.
-        }
-
-        public bool IsThemeLightMode()
-        {
-            if (this.isWindows11)
-            {
-                return IsThemeLightModeForWin11();
-            }
-            else
-            {
-                // To be removed in the future.
-                WPFUI.Theme.Style style = WPFUI.Theme.Manager.GetSystemTheme();
-                return (style == WPFUI.Theme.Style.Light);
-            }
-        }
-        private static bool IsThemeLightModeForWin11()
-        {
-            RegistryKey key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
-            int sysLightTheme = (int)key.GetValue("SystemUsesLightTheme");
-
-            bool isLight = (sysLightTheme == 1);
-            return isLight;
-        }
-
-
         public void ApplyButton_Click(object sender, RoutedEventArgs e)
         {
             int mt = 0;
@@ -608,7 +536,6 @@ namespace RoundedTB
                 lastAppliedAutoHide = activeSettings.AutoHide;
             }
             interaction.WriteJSON();
-            TrayIconCheck(isForceReset: true);
             UpdateUi();
 
         }

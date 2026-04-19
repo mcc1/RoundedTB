@@ -72,7 +72,6 @@ namespace RoundedTB
                 }
             };
 
-            WPFUI.Theme.Watcher.Start();
         }
 
         protected override void OnExit(ExitEventArgs e)
