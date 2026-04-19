@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:RoundedTB"
         xmlns:tb="http://www.hardcodet.net/taskbar"
         mc:Ignorable="d"
-        Title="RoundedTB - Configuration" Height="485" Width="718"
+        Title="RoundedTB - Configuration" Height="510" Width="760"
+        FontSize="12"
         Icon="pack://application:,,,/RoundedTBCanary.ico"
         d:Background="DarkGray"
         Visibility = "Visible"
@@ -14,6 +15,24 @@
         d:Opacity="1"
         ResizeMode="NoResize"
         >
+    <Window.Resources>
+        <Style TargetType="Label" BasedOn="{StaticResource {x:Type Label}}">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="2,0,0,0"/>
+        </Style>
+        <Style TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+        <Style TargetType="ComboBoxItem" BasedOn="{StaticResource {x:Type ComboBoxItem}}">
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+    </Window.Resources>
     <Grid x:Name="MainGrid" Margin="0,0,0,0" d:Margin="0,-16,0,0">
 
         <!-- Hidden host so the ContextMenu below gets an x:Name code-behind field.
@@ -152,78 +171,78 @@
             </Border.ContextMenu>
         </Border>
 
-        <Grid Margin="0,0,10,0" HorizontalAlignment="Right" Width="202" Height="55" VerticalAlignment="Top">
-            <Label x:Name="cornerRadiusLabel" Content="Corner radius" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-            <TextBox x:Name="cornerRadiusInput" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" HorizontalAlignment="Left" Width="94" Margin="108,19,0,0" LostFocus="cornerRadiusInput_LostFocus"/>
-            <Slider x:Name="cornerRadiusSlider" Height="10" VerticalAlignment="Top" HorizontalAlignment="Left" Width="84" LargeChange="0" SmallChange="1" Focusable="False" Maximum="48" Orientation="Horizontal" Thumb.DragCompleted="cornerRadiusSlider_DragCompleted" ValueChanged="cornerRadiusSlider_ValueChanged" Margin="0,25,0,0"/>
+        <Grid Margin="0,0,10,0" HorizontalAlignment="Right" Width="202" Height="60" VerticalAlignment="Top">
+            <Label x:Name="cornerRadiusLabel" FontSize="12" Content="Corner radius" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+            <TextBox x:Name="cornerRadiusInput" FontSize="12" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" HorizontalAlignment="Left" Width="94" Margin="108,19,0,0" LostFocus="cornerRadiusInput_LostFocus"/>
+            <Slider x:Name="cornerRadiusSlider" VerticalAlignment="Top" HorizontalAlignment="Left" Width="94" LargeChange="0" SmallChange="1" Focusable="False" Maximum="48" Orientation="Horizontal" Thumb.DragCompleted="cornerRadiusSlider_DragCompleted" ValueChanged="cornerRadiusSlider_ValueChanged" Margin="0,30,0,0"/>
         </Grid>
 
-        <Button x:Name="aboutButton" Margin="0,0,10,47" VerticalAlignment="Bottom" Content="Help" Click="aboutButton_Click" FontWeight="Normal" HorizontalAlignment="Right" Width="133" Height="31"/>
-        <Button x:Name="applyButton" Style="{DynamicResource AccentButtonStyle}" Margin="0,0,10,10" VerticalAlignment="Bottom" Content="Apply" Click="ApplyButton_Click" FontWeight="Normal" HorizontalAlignment="Right" Width="133" Height="32"/>
+        <Button x:Name="aboutButton" Margin="0,0,10,47" VerticalAlignment="Bottom" Content="Help" Click="aboutButton_Click" FontWeight="Normal" HorizontalAlignment="Right" Width="180" Height="31"/>
+        <Button x:Name="applyButton" Style="{DynamicResource AccentButtonStyle}" Margin="0,0,10,10" VerticalAlignment="Bottom" Content="Apply" Click="ApplyButton_Click" FontWeight="Normal" HorizontalAlignment="Right" Width="180" Height="32"/>
 
-        <Grid Width="202" Margin="0,190,10,0" HorizontalAlignment="Right" VerticalAlignment="Top" Height="55">
-            <Label x:Name="hoverDelayLabel" Content="Hover reveal (ms)" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-            <TextBox x:Name="hoverDelayInput" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" HorizontalAlignment="Left" Width="94" Margin="108,19,0,0" LostFocus="hoverDelayInput_LostFocus"/>
-            <Slider x:Name="hoverDelaySlider" Height="10" VerticalAlignment="Top" HorizontalAlignment="Left" Width="84" LargeChange="100" SmallChange="50" Focusable="False" Maximum="1000" Minimum="0" Orientation="Horizontal" ValueChanged="hoverDelaySlider_ValueChanged" Margin="0,25,0,0"/>
+        <Grid Width="202" Margin="0,190,10,0" HorizontalAlignment="Right" VerticalAlignment="Top" Height="60">
+            <Label x:Name="hoverDelayLabel" FontSize="12" Content="Hover reveal (ms)" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+            <TextBox x:Name="hoverDelayInput" FontSize="12" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" HorizontalAlignment="Left" Width="94" Margin="108,19,0,0" LostFocus="hoverDelayInput_LostFocus"/>
+            <Slider x:Name="hoverDelaySlider" VerticalAlignment="Top" HorizontalAlignment="Left" Width="94" LargeChange="100" SmallChange="50" Focusable="False" Maximum="1000" Minimum="0" Orientation="Horizontal" ValueChanged="hoverDelaySlider_ValueChanged" Margin="0,30,0,0"/>
         </Grid>
 
-        <Grid Width="202" Margin="0,252,10,0"   VerticalAlignment="Top" HorizontalAlignment="Right" Height="25">
-            <Label x:Name="widgetWidthLabel" Content="Width" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,0,0" Width="60"  Visibility="Hidden" />
-            <TextBox x:Name="widgetWidthInput" HorizontalAlignment="Left" Margin="0,17,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" Width="60"  Visibility="Hidden" />
-            <Label x:Name="clockWidthLabel" Content="Width" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,0,0" Width="60"  Visibility="Hidden" />
-            <TextBox x:Name="clockWidthInput" HorizontalAlignment="Left" Margin="0,17,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" Width="60"  Visibility="Hidden" />
+        <Grid Width="202" Margin="0,252,10,0"   VerticalAlignment="Top" HorizontalAlignment="Right" Height="45">
+            <Label x:Name="widgetWidthLabel" Content="Width" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,0,0" Width="60"  Visibility="Hidden" />
+            <TextBox x:Name="widgetWidthInput" FontSize="12" HorizontalAlignment="Left" Margin="0,17,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" Width="60"  Visibility="Hidden" />
+            <Label x:Name="clockWidthLabel" Content="Width" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,0,0" Width="60"  Visibility="Hidden" />
+            <TextBox x:Name="clockWidthInput" FontSize="12" HorizontalAlignment="Left" Margin="0,17,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" Width="60"  Visibility="Hidden" />
 
-            <CheckBox x:Name="dynamicCheckBox" Content="Dynamic mode" Margin="52,2,0,0" Padding="0" Checked="dynamicCheckBox_Checked" Unchecked="dynamicCheckBox_Unchecked"  RenderTransformOrigin="1.763,4.069" Visibility="Visible"  Width="140" HorizontalAlignment="Left" />
-            <CheckBox x:Name="showTrayCheckBox" Content="Show tray" Margin="70,2,0,0" Padding="0" Visibility="Hidden" HorizontalAlignment="Left" />
-            <CheckBox x:Name="showWidgetsCheckBox" Content="Show widget"  Margin="70,2,0,0" Padding="0" Visibility="Hidden" HorizontalAlignment="Left" />
-            <CheckBox x:Name="showClockCheckBox" Content="Show clock"  Margin="70,2,0,0" Padding="0" Visibility="Hidden" HorizontalAlignment="Left" />
+            <CheckBox x:Name="dynamicCheckBox" Content="Dynamic mode" FontSize="12" Margin="52,2,0,0" Padding="6,0,0,0" VerticalContentAlignment="Center" Checked="dynamicCheckBox_Checked" Unchecked="dynamicCheckBox_Unchecked"  RenderTransformOrigin="1.763,4.069" Visibility="Visible"  Width="140" HorizontalAlignment="Left" />
+            <CheckBox x:Name="showTrayCheckBox" Content="Show tray" FontSize="12" Margin="70,2,0,0" Padding="6,0,0,0" VerticalContentAlignment="Center" Visibility="Hidden" HorizontalAlignment="Left" />
+            <CheckBox x:Name="showWidgetsCheckBox" Content="Show widget" FontSize="12" Margin="70,2,0,0" Padding="6,0,0,0" VerticalContentAlignment="Center" Visibility="Hidden" HorizontalAlignment="Left" />
+            <CheckBox x:Name="showClockCheckBox" Content="Show clock" FontSize="12" Margin="70,2,0,0" Padding="6,0,0,0" VerticalContentAlignment="Center" Visibility="Hidden" HorizontalAlignment="Left" />
         </Grid>
 
         <CheckBox x:Name="centredCheckBox" Content="Centred taskbar?" Margin="10,62,0,0" VerticalAlignment="Top" Visibility="Hidden"/>
         <Button x:Name="splitHelpButton" Opacity="0.001" Content="Click me!"  Margin="107,122,0,0" Click="splitHelpButton_Click"  Height="32" Width="94" VerticalAlignment="Top" FontWeight="Normal" FontFamily="Segoe UI Semibold" Visibility="Hidden"/>
 
-        <Grid Width="500" Margin="15,0,0,15" HorizontalAlignment="Left" Height="110" VerticalAlignment="Bottom">
-            <CheckBox x:Name="showSegmentsOnHoverCheckBox" Content="Show segments only when hovered over with the mouse - PERFORMANCE ISSUES" Margin="0,0,0,0" VerticalAlignment="Top" Checked="showSegmentsOnHoverCheckBox_Checked" Unchecked="showSegmentsOnHoverCheckBox_Unchecked" HorizontalAlignment="Left" d:LayoutOverrides="HorizontalAlignment, VerticalAlignment"/>
-            <CheckBox x:Name="fillMaximisedCheckBox" Content="When a window is maximised, restore the taskbar" Margin="0,30,0,0" Checked="fillMaximisedCheckBox_Checked"  Unchecked="fillMaximisedCheckBox_Unchecked"  VerticalAlignment="Top" HorizontalAlignment="Left" d:LayoutOverrides="HorizontalAlignment, VerticalAlignment"/>
-            <CheckBox x:Name="fillAltTabCheckBox" Content="When alt+tab or win+tab is pressed, restore the taskbar" Margin="0,60,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" d:LayoutOverrides="HorizontalAlignment"/>
-            <CheckBox x:Name="compositionFixCheckBox" Content="Improve compatibility with TranslucentTB and other mods (may cause flickering)" Margin="0,90,0,0" VerticalAlignment="Top" IsChecked="False" Checked="compositionFixCheckBox_Checked" HorizontalAlignment="Left" d:LayoutOverrides="HorizontalAlignment, VerticalAlignment"/>
+        <Grid Width="530" Margin="15,0,0,15" HorizontalAlignment="Left" Height="130" VerticalAlignment="Bottom">
+            <CheckBox x:Name="showSegmentsOnHoverCheckBox" FontSize="12" Content="Show segments only when hovered over with the mouse - PERFORMANCE ISSUES" Margin="0,0,0,0" VerticalAlignment="Top" Checked="showSegmentsOnHoverCheckBox_Checked" Unchecked="showSegmentsOnHoverCheckBox_Unchecked" HorizontalAlignment="Left" d:LayoutOverrides="HorizontalAlignment, VerticalAlignment"/>
+            <CheckBox x:Name="fillMaximisedCheckBox" FontSize="12" Content="When a window is maximised, restore the taskbar" Margin="0,30,0,0" Checked="fillMaximisedCheckBox_Checked"  Unchecked="fillMaximisedCheckBox_Unchecked"  VerticalAlignment="Top" HorizontalAlignment="Left" d:LayoutOverrides="HorizontalAlignment, VerticalAlignment"/>
+            <CheckBox x:Name="fillAltTabCheckBox" FontSize="12" Content="When alt+tab or win+tab is pressed, restore the taskbar" Margin="0,60,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" d:LayoutOverrides="HorizontalAlignment"/>
+            <CheckBox x:Name="compositionFixCheckBox" FontSize="12" Content="Improve compatibility with TranslucentTB and other mods (may cause flickering)" Margin="0,90,0,0" VerticalAlignment="Top" IsChecked="False" Checked="compositionFixCheckBox_Checked" HorizontalAlignment="Left" d:LayoutOverrides="HorizontalAlignment, VerticalAlignment"/>
         </Grid>
 
         <Grid Width="202" Height="110" Margin="0,70,10,0" HorizontalAlignment="Right" VerticalAlignment="Top">
-            <Label x:Name="mTopLabel" Content="Top Margin" HorizontalAlignment="Left" VerticalAlignment="Top" Width="94" Margin="0,0,0,0" d:LayoutOverrides="HorizontalAlignment, VerticalAlignment"/>
-            <TextBox x:Name="mTopInput" HorizontalAlignment="Left" Margin="0,20,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" Width="94" d:LayoutOverrides="HorizontalAlignment, VerticalAlignment" LostFocus="mTopInput_LostFocus"/>
+            <Label x:Name="mTopLabel" FontSize="12" Content="Top Margin" HorizontalAlignment="Left" VerticalAlignment="Top" Width="94" Margin="0,0,0,0" d:LayoutOverrides="HorizontalAlignment, VerticalAlignment"/>
+            <TextBox x:Name="mTopInput" FontSize="12" HorizontalAlignment="Left" Margin="0,20,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" Width="94" d:LayoutOverrides="HorizontalAlignment, VerticalAlignment" LostFocus="mTopInput_LostFocus"/>
 
-            <Label x:Name="mBottomLabel" Content="Bottom Margin" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="108,0,0,0" Width="94" d:LayoutOverrides="HorizontalAlignment, VerticalAlignment"/>
-            <TextBox x:Name="mBottomInput" HorizontalAlignment="Left" Margin="108,20,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" Width="94" d:LayoutOverrides="VerticalAlignment" LostFocus="mBottomInput_LostFocus"/>
+            <Label x:Name="mBottomLabel" FontSize="12" Content="Bottom Margin" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="108,0,0,0" Width="94" d:LayoutOverrides="HorizontalAlignment, VerticalAlignment"/>
+            <TextBox x:Name="mBottomInput" FontSize="12" HorizontalAlignment="Left" Margin="108,20,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" Width="94" d:LayoutOverrides="VerticalAlignment" LostFocus="mBottomInput_LostFocus"/>
 
-            <Label x:Name="mLeftLabel" Content="Left Margin" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,56,0,0" Width="94" d:LayoutOverrides="HorizontalAlignment"/>
-            <TextBox x:Name="mLeftInput" HorizontalAlignment="Left" Margin="0,76,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" Width="94" d:LayoutOverrides="HorizontalAlignment" LostFocus="mLeftInput_LostFocus"/>
+            <Label x:Name="mLeftLabel" FontSize="12" Content="Left Margin" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,56,0,0" Width="94" d:LayoutOverrides="HorizontalAlignment"/>
+            <TextBox x:Name="mLeftInput" FontSize="12" HorizontalAlignment="Left" Margin="0,76,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" Width="94" d:LayoutOverrides="HorizontalAlignment" LostFocus="mLeftInput_LostFocus"/>
 
-            <Label x:Name="mRightLabel" Content="Right Margin" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="108,56,0,0" Width="84"/>
-            <TextBox x:Name="mRightInput" HorizontalAlignment="Left" Margin="108,76,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" Width="94" LostFocus="mRightInput_LostFocus"/>
+            <Label x:Name="mRightLabel" FontSize="12" Content="Right Margin" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="108,56,0,0" Width="94"/>
+            <TextBox x:Name="mRightInput" FontSize="12" HorizontalAlignment="Left" Margin="108,76,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" Width="94" LostFocus="mRightInput_LostFocus"/>
 
         </Grid>
 
-        <Grid x:Name="tbDiagramGrid" Margin="10,0,0,0" Height="278" VerticalAlignment="Top" HorizontalAlignment="Left" Width="486">
+        <Grid x:Name="tbDiagramGrid" Margin="10,0,0,0" Height="278" VerticalAlignment="Top" HorizontalAlignment="Left" Width="500">
             <Rectangle Stroke="#30242424" Fill="#20808080" RadiusX="5" RadiusY="5"/>
-            <Button x:Name="taskbarRectStandIn" Style="{DynamicResource AccentButtonStyle}" Margin="126,0,126,5" VerticalAlignment="Bottom" Click="taskbarRectStandIn_Click" Height="32"></Button>
-            <Button x:Name="trayRectStandIn" Margin="415,0,5,5" Click="trayRectStandIn_Click" VerticalAlignment="Bottom" Height="32" Padding="0">📅</Button>
-            <Button x:Name="widgetsRectStandIn" Margin="5,0,415,5" Click="widgetsRectStandIn_Click" VerticalAlignment="Bottom" Height="32" Padding="0">📰</Button>
-            <Button x:Name="clockRectStandIn" Margin="415,0,5,60" Click="clockRectStandIn_Click" VerticalAlignment="Bottom" Height="32" VerticalContentAlignment="Center" Padding="0">🕑</Button>
+            <Button x:Name="taskbarRectStandIn" Style="{DynamicResource AccentButtonStyle}" Margin="75,0,75,5" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Click="taskbarRectStandIn_Click" Height="32"></Button>
+            <Button x:Name="trayRectStandIn" HorizontalAlignment="Right" Width="65" Margin="0,0,5,5" Click="trayRectStandIn_Click" VerticalAlignment="Bottom" Height="32" Padding="0">📅</Button>
+            <Button x:Name="widgetsRectStandIn" HorizontalAlignment="Left" Width="65" Margin="5,0,0,5" Click="widgetsRectStandIn_Click" VerticalAlignment="Bottom" Height="32" Padding="0">📰</Button>
+            <Button x:Name="clockRectStandIn" HorizontalAlignment="Right" Width="65" Margin="0,0,5,60" Click="clockRectStandIn_Click" VerticalAlignment="Bottom" Height="32" VerticalContentAlignment="Center" Padding="0">🕑</Button>
 
             <Label Content="RoundedTB" HorizontalAlignment="Center" Margin="0,59,0,108" FontFamily="Segoe UI Variable Display" FontWeight="SemiBold" FontSize="60" Opacity="0.75"/>
             <Label Content="To begin, select a taskbar segment below." HorizontalAlignment="Center" Margin="0,138,0,75" FontFamily="Segoe UI Variable Display" FontWeight="SemiBold" FontSize="20" Opacity="0.75"/>
         </Grid>
 
-        <Grid Margin="0,0,10,83" HorizontalAlignment="Right" Width="133" Height="50" VerticalAlignment="Bottom">
+        <Grid Margin="0,0,10,83" HorizontalAlignment="Right" Width="180" Height="50" VerticalAlignment="Bottom">
             <Label Content="Auto-hide" Height="20" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-            <ComboBox x:Name="autoHideComboBox" Margin="0,18,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="133">
-                <ComboBoxItem>Always show</ComboBoxItem>
-                <ComboBoxItem>Always hide</ComboBoxItem>
-                <ComboBoxItem>Show on desktop</ComboBoxItem>
+            <ComboBox x:Name="autoHideComboBox" FontSize="12" Margin="0,18,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="180">
+                <ComboBoxItem FontSize="12">Always show</ComboBoxItem>
+                <ComboBoxItem FontSize="12">Always hide</ComboBoxItem>
+                <ComboBoxItem FontSize="12">Show on desktop</ComboBoxItem>
             </ComboBox>
         </Grid>
-        <Rectangle HorizontalAlignment="Center" Margin="0,280,0,0" Stroke="#4C909090" Width="698" RadiusX="1" RadiusY="1.5" Height="1" VerticalAlignment="Top"/>
+        <Rectangle HorizontalAlignment="Center" Margin="0,305,0,0" Stroke="#4C909090" Width="740" RadiusX="1" RadiusY="1.5" Height="1" VerticalAlignment="Top"/>
 
     </Grid>
 </Window>
