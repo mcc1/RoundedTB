@@ -21,6 +21,16 @@ jobs:
       with:
         dotnet-version: '10.0.x'
 
+    - name: Probe UAP SDKs on runner
+      shell: pwsh
+      run: |
+        Write-Host "== Installed UAP SDKs =="
+        $root = "${env:ProgramFiles(x86)}\Windows Kits\10\Platforms\UAP"
+        if (Test-Path $root) { Get-ChildItem $root | Select-Object -ExpandProperty Name } else { Write-Host "UAP root missing: $root" }
+        Write-Host "== Installed Windows 10 SDKs =="
+        $sdkRoot = "${env:ProgramFiles(x86)}\Windows Kits\10\Include"
+        if (Test-Path $sdkRoot) { Get-ChildItem $sdkRoot | Select-Object -ExpandProperty Name } else { Write-Host "SDK Include root missing: $sdkRoot" }
+
     - name: Restore
       run: msbuild RoundedTB.sln /t:Restore /p:Configuration=Release /p:Platform=x64
 
