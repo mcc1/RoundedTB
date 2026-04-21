@@ -92,7 +92,7 @@ jobs:
         --- Option B: PowerShell (run as Administrator) ---
           Import-Certificate -FilePath .\RoundedTB.cer `
             -CertStoreLocation Cert:\LocalMachine\TrustedPeople
-          Add-AppxPackage .\RoundedTB.Package_2.0.3.0_x64.msixbundle
+          Add-AppxPackage .\RoundedTB.Package_2.0.3.1_x64.msixbundle
 
         --- Uninstall ---
         Settings -> Apps -> Installed apps -> RoundedTB -> Uninstall.

@@ -38,7 +38,7 @@ namespace RoundedTB
             subtitleBlock.Text = "Community Edition (Dev build)";
 #elif RTB_RELEASE
             bannerMst.Visibility = Visibility.Visible;
-            subtitleBlock.Text = "Community Edition v0.3";
+            subtitleBlock.Text = "Community Edition v0.3.1";
 #else
             bannerCan.Visibility = Visibility.Visible;
             subtitleBlock.Text = "Community Edition (Canary)";
