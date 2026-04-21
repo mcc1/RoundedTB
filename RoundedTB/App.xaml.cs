@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Forms;
 using Serilog;
 using WpfApplication = System.Windows.Application;
 
@@ -21,20 +22,29 @@ namespace RoundedTB
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            // Check if another instance is already running
-            _mutex = new Mutex(true, MutexName, out bool isNewInstance);
+            // Logging first so we can actually record why a second-instance launch aborts.
+            SetupLogging();
+            SetupExceptionHandling();
 
-            if (!isNewInstance)
+            // Two-layer single-instance check:
+            //   1. Named mutex — fast path for the common case (classic+classic, MSIX+MSIX).
+            //   2. Process enumeration — catches edge cases where the mutex is namespace-
+            //      isolated (different integrity level, cross-container scenarios). Both
+            //      classic and MSIX builds launch the same RoundedTB.exe, so ProcessName
+            //      matches in either combination.
+            _mutex = new Mutex(true, MutexName, out bool isNewInstance);
+            if (!isNewInstance || AnotherInstanceRunning())
             {
-                Log.Information("RoundedTB is already running. Showing notification and exiting.");
-                ShowInstanceAlreadyRunningNotification();
+                Log.Warning("RoundedTB is already running (mutexHeld={Mutex}); aborting second instance.", !isNewInstance);
+                MessageBox.Show(
+                    "RoundedTB is already running.\n\nUse the tray icon to access the existing instance. If you can't see the tray icon, check Task Manager for 'RoundedTB' and end it before launching again.",
+                    "RoundedTB",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
                 _allowShutdown = true;
                 Shutdown();
                 return;
             }
-
-            SetupLogging();
-            SetupExceptionHandling();
 
             Log.Information("RoundedTB Started");
 
@@ -91,8 +101,11 @@ namespace RoundedTB
             Log.Information("RoundedTB Exiting");
             Log.CloseAndFlush();
 
-            // Release the mutex
-            _mutex?.ReleaseMutex();
+            // Release the mutex. ReleaseMutex throws if the current thread
+            // doesn't own it (true for second-instance exits where we never
+            // acquired). Swallow that case; Dispose always closes the handle.
+            try { _mutex?.ReleaseMutex(); }
+            catch (ApplicationException) { }
             _mutex?.Dispose();
 
             base.OnExit(e);
@@ -118,84 +131,23 @@ namespace RoundedTB
             base.Shutdown(exitCode);
         }
 
-        private void ShowInstanceAlreadyRunningNotification()
+        // Enumerate processes with the same image name as ours. Both classic and
+        // MSIX builds launch RoundedTB.exe, so ProcessName matches either way.
+        // This backstops the named mutex check for cases where kernel namespace
+        // isolation (different integrity, some MSIX containers) hides the mutex
+        // from us even though another instance is very much running.
+        private static bool AnotherInstanceRunning()
         {
+            using var me = Process.GetCurrentProcess();
+            var siblings = Process.GetProcessesByName(me.ProcessName);
             try
             {
-                // Try to show a toast notification with the app icon
-                var notifyIcon = new NotifyIcon
-                {
-                    Icon = LoadAppIcon(),
-                    Visible = true
-                };
-
-                notifyIcon.ShowBalloonTip(3000, "RoundedTB", "RoundedTB is already running!", ToolTipIcon.Info);
-                notifyIcon.Visible = false;
-                notifyIcon.Dispose();
+                return siblings.Any(p => p.Id != me.Id);
             }
-            catch (Exception ex)
+            finally
             {
-                Log.Warning(ex, "Failed to show notification for already running instance");
-
-                // Fallback: Show a simple message box
-                System.Windows.MessageBox.Show("RoundedTB is already running!", "RoundedTB", MessageBoxButton.OK, MessageBoxImage.Information);
+                foreach (var p in siblings) p.Dispose();
             }
-        }
-
-        private System.Drawing.Icon LoadAppIcon()
-        {
-            try
-            {
-                // Try to load the app icon from the executable itself
-                try
-                {
-                    var exeIcon = System.Drawing.Icon.ExtractAssociatedIcon(System.Windows.Application.ResourceAssembly.Location);
-                    if (exeIcon != null)
-                    {
-                        Log.Information("Successfully loaded icon from executable");
-                        return exeIcon;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Debug($"Failed to load icon from executable: {ex.Message}");
-                }
-
-                // Try to load the app icon from resources - try multiple possible paths.
-                // Primary path is the build-variant icon (Dev/Canary/Release); others are
-                // fallbacks in case the variant resource is missing for any reason.
-                string[] iconPaths = {
-                    Branding.IconResourcePath,
-                    "pack://application:,,,/RoundedTB.ico",
-                    "pack://application:,,,/RoundedTBCanary.ico",
-                    "pack://application:,,,/res/TrayDark.ico"
-                };
-
-                foreach (string iconPath in iconPaths)
-                {
-                    try
-                    {
-                        var iconStream = System.Windows.Application.GetResourceStream(new Uri(iconPath));
-                        if (iconStream != null)
-                        {
-                            Log.Information($"Successfully loaded icon from: {iconPath}");
-                            return new System.Drawing.Icon(iconStream.Stream);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Debug($"Failed to load icon from {iconPath}: {ex.Message}");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, "Failed to load app icon, using default");
-            }
-
-            Log.Information("Using fallback system information icon");
-            // Fallback to system information icon
-            return System.Drawing.SystemIcons.Information;
         }
 
         private void SetupLogging()
