@@ -51,17 +51,27 @@ namespace RoundedTB
         }
         private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
         {
-            Process.Start(e.Uri.ToString());
+            OpenWithShell(e.Uri.ToString());
+            e.Handled = true;
         }
 
         private void configButton_Click(object sender, RoutedEventArgs e)
         {
-            Process.Start(((MainWindow)Application.Current.MainWindow).configPath);
+            OpenWithShell(((MainWindow)Application.Current.MainWindow).configPath);
         }
 
         private void logButton_Click(object sender, RoutedEventArgs e)
         {
-            Process.Start(((MainWindow)Application.Current.MainWindow).logPath);
+            OpenWithShell(((MainWindow)Application.Current.MainWindow).logPath);
+        }
+
+        // .NET (Core) defaults Process.Start(string) to UseShellExecute=false,
+        // which tries to exec the path as an .exe and throws for URLs or
+        // non-executable files. Route through ShellExecute so the associated
+        // handler (browser for URLs, text editor for .json/.log) opens.
+        private static void OpenWithShell(string target)
+        {
+            Process.Start(new ProcessStartInfo(target) { UseShellExecute = true });
         }
     }
 }
