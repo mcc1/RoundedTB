@@ -22,6 +22,18 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(RTB_RELEASE)' == 'true'">
     <DefineConstants>$(DefineConstants);RTB_RELEASE</DefineConstants>
+    <!--
+      Redirect the signed release output so it sits alongside (rather than
+      overwrites) the default Canary build. With this, one checkout can hold
+      all three variants at once:
+        bin\Debug\...\RoundedTB.exe                 (Debug, Dev icon)
+        bin\Release\...\RoundedTB.exe               (Release, Canary icon)
+        bin\Release-RTB\...\RoundedTB.exe           (Release + RTB_RELEASE)
+      obj\ is intentionally shared — DefineConstants differs between RTB and
+      Canary so the incremental build correctly triggers a recompile when you
+      flip the flag; only the emitted bin needs to be segregated.
+    -->
+    <OutputPath>bin\$(Configuration)-RTB\</OutputPath>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
