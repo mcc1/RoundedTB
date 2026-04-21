@@ -135,14 +135,18 @@ namespace RoundedTB
                                 catch (Exception) { }
                             }
 
-                            ReloadChecker checker = new();
+                            // Force-reload the UIA TaskbarFrame every infrequent tick (~1s).
+                            // Why: virtual-desktop switches (with "show windows only on the
+                            // desktop they're open on" enabled) rebuild the taskbar's XAML
+                            // children without changing any window handles. The cached
+                            // _taskbarFrame element can then return a stale child snapshot,
+                            // so the poll thinks AppListRect hasn't changed and the rounded
+                            // region stays sized to the previous desktop's app count until
+                            // Apply is pressed. Reloading unconditionally costs one cheap
+                            // UIA query per taskbar per second.
                             mw.taskbarDetails?.ForEach(taskbar =>
                             {
-                                if (taskbar.AppListXaml.ReloadRequired)
-                                {
-                                    taskbar.AppListXaml.ReloadTaskbarFrameElement();
-                                    checker.IsReload = true;
-                                }
+                                taskbar.AppListXaml?.ReloadTaskbarFrameElement();
                             });
                             infrequentCount = 0;
                         }

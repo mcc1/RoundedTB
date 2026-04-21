@@ -84,11 +84,19 @@ namespace RoundedTB
 
             public void ReloadTaskbarFrameElement()
             {
-                // When the taskbar is restarted, there's a possibility that XAML elements may not exist when the taskbar handle is created.
-                // Therefore, if XAML elements have been previously acquired, it's considered a restart, and we attempt to retrieve XAML again.
+                // Called to rebuild the cached TaskbarFrame UIA element. Originally only fired
+                // when _taskbarFrame went fully null (e.g. taskbar restart). Now also called
+                // periodically from the worker's infrequent branch so stale child snapshots
+                // across virtual-desktop-triggered XAML refreshes can't leave the region
+                // sized to the previous desktop's app count.
                 if (_uia == null)
                 {
                     return;
+                }
+                if (_taskbarFrame != null)
+                {
+                    Marshal.ReleaseComObject(_taskbarFrame);
+                    _taskbarFrame = null;
                 }
                 _taskbarFrame = GetTaskbarFrameElement(_hwndTaskbarMain, _uia);
             }
