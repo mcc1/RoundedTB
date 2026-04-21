@@ -304,9 +304,9 @@ namespace RoundedTB
                     }
                 }
             }
-            catch (Exception aaaa)
+            catch (Exception ex)
             {
-                interaction.AddLog(aaaa.Message);
+                Log.Error(ex, "Failed to read taskbar alignment from registry");
             }
             if (!isWindows11)
             {
@@ -499,9 +499,9 @@ namespace RoundedTB
                     }
                 }
             }
-            catch (InvalidOperationException aaaa)
+            catch (InvalidOperationException ex)
             {
-                interaction.AddLog(aaaa.Message);
+                Log.Warning(ex, "Taskbar update failed; likely a transient collection-modified race");
             }
 
 
@@ -562,9 +562,9 @@ namespace RoundedTB
             {
                 taskbarThread.CancelAsync();
             }
-            catch (Exception aaaa)
+            catch (Exception ex)
             {
-                interaction.AddLog(aaaa.Message);
+                Log.Warning(ex, "Failed to cancel background worker on close");
             }
             while (taskbarThread.IsBusy == true)
             {
@@ -583,9 +583,9 @@ namespace RoundedTB
                     AutoHide(false, taskbarDetails);
                 }
             }
-            catch (InvalidOperationException aaaa)
+            catch (InvalidOperationException ex)
             {
-                interaction.AddLog($"Taskbar structure changed on exit:\n{aaaa.Message}");
+                Log.Warning(ex, "Taskbar structure changed during exit cleanup");
             }
             interaction.AddLog("Exiting RoundedTB.");
 
@@ -818,7 +818,7 @@ namespace RoundedTB
             }
             catch (Exception ex)
             {
-                interaction.AddLog($"Failed to update startup registration: {ex.Message}");
+                Log.Warning(ex, "Failed to update startup registration");
             }
             finally
             {
@@ -845,7 +845,7 @@ namespace RoundedTB
             }
             catch (Exception ex)
             {
-                interaction.AddLog($"Failed to read startup registration: {ex.Message}");
+                Log.Warning(ex, "Failed to read startup registration");
             }
         }
 
