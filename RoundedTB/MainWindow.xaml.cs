@@ -729,7 +729,9 @@ namespace RoundedTB
 
             try
             {
-                var exeIcon = DrawingIcon.ExtractAssociatedIcon(System.Windows.Application.ResourceAssembly.Location);
+                // Prefer ProcessPath: Assembly.Location returns "" under single-file publish.
+                string exePath = Environment.ProcessPath ?? System.Windows.Application.ResourceAssembly.Location;
+                var exeIcon = DrawingIcon.ExtractAssociatedIcon(exePath);
                 if (exeIcon != null)
                 {
                     return exeIcon;
