@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Windows;
 using System.Windows.Threading;
+using Serilog;
 
 namespace RoundedTB
 {
@@ -49,6 +50,16 @@ namespace RoundedTB
         bool redrawOverride = false;
         int infrequentCount = 0;
 
+        // Diagnostic state for autohide. Tracked per-taskbar by index so we
+        // only log on transitions (not every 100ms tick). Goal: capture the
+        // moment autohide silently stops so we can tell WS_EX_LAYERED loss
+        // from a stuck opacity value from a worker-side exception.
+        private readonly Dictionary<int, bool> _lastTaskbarHidden = new();
+        private readonly Dictionary<int, byte> _lastLoggedOpacity = new();
+        private readonly Dictionary<int, bool> _lastLoggedLayeredMissing = new();
+        private readonly Dictionary<int, bool> _lastLoggedGLWAFailed = new();
+        private bool _loggedAutohideEntered = false;
+
         public Background()
         {
             // Reference lookup is now deferred until mw property is accessed
@@ -64,9 +75,22 @@ namespace RoundedTB
         public void DoWork(object sender, DoWorkEventArgs e)
         {
             mw.interaction.AddLog("in bw");
+            Log.Information("Background worker started");
             BackgroundWorker worker = sender as BackgroundWorker;
+            int heartbeatCount = 0;
+            DateTime lastHeartbeat = DateTime.UtcNow;
             while (true)
             {
+                // Heartbeat every ~60s so if the worker hangs or dies we can see the
+                // last timestamp. Cheap: just a counter + clock compare.
+                heartbeatCount++;
+                if (heartbeatCount >= 600)
+                {
+                    heartbeatCount = 0;
+                    var now = DateTime.UtcNow;
+                    Log.Debug("Background worker heartbeat (interval={Seconds:0.0}s)", (now - lastHeartbeat).TotalSeconds);
+                    lastHeartbeat = now;
+                }
                 try
                 {
                     if (worker.CancellationPending == true)
@@ -262,7 +286,77 @@ namespace RoundedTB
 
                                 int animSpeed = 15;
                                 byte taskbarOpacity = 0;
-                                LocalPInvoke.GetLayeredWindowAttributes(taskbars[current].TaskbarHwnd, out _, out taskbarOpacity, out _);
+                                bool glwaOk = LocalPInvoke.GetLayeredWindowAttributes(taskbars[current].TaskbarHwnd, out _, out taskbarOpacity, out _);
+
+                                // --- Diagnostic logging (state transitions only, never per-tick) ---
+                                if (!_loggedAutohideEntered)
+                                {
+                                    Log.Debug("Autohide block active. AutoHide={Auto} taskbarCount={Count}",
+                                        settings.AutoHide, taskbars.Count);
+                                    _loggedAutohideEntered = true;
+                                }
+
+                                int exStyle = LocalPInvoke.GetWindowLong(taskbars[current].TaskbarHwnd, LocalPInvoke.GWL_EXSTYLE).ToInt32();
+                                bool layeredMissing = (exStyle & LocalPInvoke.WS_EX_LAYERED) != LocalPInvoke.WS_EX_LAYERED;
+
+                                // Win11 Explorer occasionally strips WS_EX_LAYERED from the taskbar
+                                // (observed after long uptime / DPI or composition changes). Once it's
+                                // stripped, GetLayeredWindowAttributes returns false and opacity reads
+                                // as 0 forever, so neither the hide (opacity==255) nor reveal
+                                // (opacity==1) branch below can fire. Re-apply the style immediately
+                                // and prime alpha to 255 to match the actually-visible state; the next
+                                // tick picks up from a clean baseline.
+                                if (layeredMissing)
+                                {
+                                    LocalPInvoke.SetWindowLong(
+                                        taskbars[current].TaskbarHwnd,
+                                        LocalPInvoke.GWL_EXSTYLE,
+                                        exStyle | LocalPInvoke.WS_EX_LAYERED);
+                                    LocalPInvoke.SetLayeredWindowAttributes(
+                                        taskbars[current].TaskbarHwnd, 0, 255, LocalPInvoke.LWA_ALPHA);
+                                    taskbars[current].TaskbarHidden = false;
+
+                                    if (!_lastLoggedLayeredMissing.GetValueOrDefault(current))
+                                    {
+                                        Log.Warning(
+                                            "Autohide: WS_EX_LAYERED was cleared on taskbar {Idx} (hwnd=0x{Hwnd:X}); re-applied and reset alpha to 255.",
+                                            current, taskbars[current].TaskbarHwnd.ToInt64());
+                                        _lastLoggedLayeredMissing[current] = true;
+                                    }
+                                    continue;
+                                }
+                                else if (_lastLoggedLayeredMissing.GetValueOrDefault(current))
+                                {
+                                    Log.Information("Autohide: WS_EX_LAYERED stable again on taskbar {Idx}", current);
+                                    _lastLoggedLayeredMissing[current] = false;
+                                }
+
+                                if (!glwaOk && !_lastLoggedGLWAFailed.GetValueOrDefault(current))
+                                {
+                                    Log.Warning(
+                                        "Autohide: GetLayeredWindowAttributes returned false on taskbar {Idx} (hwnd=0x{Hwnd:X}) even though WS_EX_LAYERED is set. Hide/reveal branches will be skipped this tick.",
+                                        current, taskbars[current].TaskbarHwnd.ToInt64());
+                                    _lastLoggedGLWAFailed[current] = true;
+                                }
+                                else if (glwaOk && _lastLoggedGLWAFailed.GetValueOrDefault(current))
+                                {
+                                    Log.Information("Autohide: GetLayeredWindowAttributes recovered on taskbar {Idx}, opacity={Opacity}", current, taskbarOpacity);
+                                    _lastLoggedGLWAFailed[current] = false;
+                                }
+
+                                // Flag when opacity is a value the state machine can't act on. At 10Hz
+                                // normal values are 0 (uninitialised), 1 (hidden), 255 (visible), and
+                                // 63/127/191 only during the ~60ms fade animation. Anything else sitting
+                                // for multiple ticks means something external reset the layered state.
+                                byte lastOp = _lastLoggedOpacity.GetValueOrDefault(current, (byte)255);
+                                bool opacityUnexpected = taskbarOpacity != 0 && taskbarOpacity != 1 && taskbarOpacity != 255
+                                                         && taskbarOpacity != 63 && taskbarOpacity != 127 && taskbarOpacity != 191;
+                                if (opacityUnexpected && taskbarOpacity != lastOp)
+                                {
+                                    Log.Warning("Autohide: unexpected opacity {Opacity} on taskbar {Idx}", taskbarOpacity, current);
+                                }
+                                _lastLoggedOpacity[current] = taskbarOpacity;
+                                // --- end diagnostic ---
 
                                 // Reveal gate depends on current state:
                                 //  - Hidden: require the 1s hover OR force-show to reveal
@@ -296,6 +390,7 @@ namespace RoundedTB
                                     taskbars[current].Ignored = true;
                                     taskbars[current].TaskbarHidden = false;
                                     Debug.WriteLine("MouseOver TB");
+                                    Log.Debug("Autohide reveal on taskbar {Idx} (forceShow={ForceShow}, hoverReady={Hover})", current, forceShow, hoverRevealReady);
                                 }
                                 else if (!shouldBeVisible && taskbarOpacity == 255)
                                 {
@@ -314,6 +409,7 @@ namespace RoundedTB
                                     taskbars[current].Ignored = true;
                                     taskbars[current].TaskbarHidden = true;
                                     Debug.WriteLine("MouseOff TB");
+                                    Log.Debug("Autohide hide on taskbar {Idx} (forceShow={ForceShow}, hover={Hover})", current, forceShow, isHoveringOverTaskbar);
                                 }
                             }
                             else
@@ -377,11 +473,13 @@ namespace RoundedTB
                         System.Threading.Thread.Sleep(100);
                     }
                 }
-                catch (TypeInitializationException ex)
+                catch (Exception ex)
                 {
-                    mw.interaction.AddLog(ex.Message);
-                    mw.interaction.AddLog(ex.InnerException.Message);
-                    throw ex;
+                    // Worker used to die silently on anything except TypeInitializationException.
+                    // Log and continue so autohide keeps running; if the same error repeats every
+                    // tick it will be obvious in the log.
+                    Log.Error(ex, "Background worker iteration threw {Type}", ex.GetType().Name);
+                    System.Threading.Thread.Sleep(100);
                 }
             }
         }
