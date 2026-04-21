@@ -49,21 +49,19 @@
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <!--
+      All three variant icons ship as Resource so the pack://application URIs
+      in Branding.cs resolve from the embedded resource table in every build.
+      Do NOT re-add a <Content Include="RoundedTB.ico" />: having the same file
+      as both Resource and Content makes the pack URI resolver prefer the
+      Content entry (ContentFilePart), which expects a loose file on disk that
+      the build doesn't copy, so the RTB_RELEASE variant crashes on startup.
+    -->
     <Resource Include="RoundedTB.ico" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <Resource Include="RoundedTBDev.ico" />
+    <Resource Include="RoundedTBCanary.ico" />
     <Resource Include="res\TrayDark.ico" />
     <Resource Include="res\TrayLight.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="RoundedTB.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="RoundedTBDev.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="RoundedTBCanary.ico" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="res\HeadBanner.png" />
