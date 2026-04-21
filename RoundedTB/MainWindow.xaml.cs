@@ -468,6 +468,20 @@ namespace RoundedTB
             {
                 foreach (Types.Taskbar taskbar in taskbarDetails)
                 {
+                    // Mirror the poll loop's fill guard. With FillOnMaximise enabled and a
+                    // maximised window on this taskbar's monitor, the poll has already called
+                    // ResetTaskbar to strip the region — its rect cache was frozen at the
+                    // pre-fill values. Running UpdateSimple/Dynamic here would redraw a region
+                    // sized to those stale bounds, visibly shrinking the taskbar. Keep it
+                    // reset and mark Ignored so the poll recomputes cleanly when the window
+                    // unmaximises.
+                    if (Taskbar.TaskbarShouldBeFilled(taskbar.TaskbarHwnd, activeSettings))
+                    {
+                        Taskbar.ResetTaskbar(taskbar, activeSettings);
+                        taskbar.Ignored = true;
+                        continue;
+                    }
+
                     int isFullTest = taskbar.TrayRect.Left - taskbar.AppListRect.Right;
                     if (!activeSettings.IsDynamic || (isFullTest <= taskbar.ScaleFactor * 25 && isFullTest > 0 && taskbar.TrayRect.Left != 0))
                     {
