@@ -74,7 +74,6 @@ namespace RoundedTB
         // Main method for the BackgroundWorker - runs indefinitely
         public void DoWork(object sender, DoWorkEventArgs e)
         {
-            mw.interaction.AddLog("in bw");
             BackgroundWorker worker = sender as BackgroundWorker;
 #if DEBUG
             Log.Information("Background worker started");
@@ -99,7 +98,6 @@ namespace RoundedTB
                 {
                     if (worker.CancellationPending == true)
                     {
-                        mw.interaction.AddLog("cancelling");
                         e.Cancel = true;
                         break;
                     }
@@ -454,7 +452,6 @@ namespace RoundedTB
                                 Debug.WriteLine($"Refresh required on taskbar {current}");
                                 taskbars[current].Ignored = false;
                                 int isFullTest = newTaskbar.TrayRect.Left - newTaskbar.AppListRect.Right;
-                                mw.interaction.AddLog($"Taskbar: {current} - AppList ends: {newTaskbar.AppListRect.Right} - Tray starts: {newTaskbar.TrayRect.Left} - Total gap: {isFullTest}");
                                 if (!settings.IsDynamic || (isFullTest <= taskbars[current].ScaleFactor * 25 && isFullTest > 0 && newTaskbar.TrayRect.Left != 0))
                                 {
                                     // Add the rect changes to the temporary list of taskbars
@@ -462,7 +459,6 @@ namespace RoundedTB
                                     taskbars[current].AppListRect = newTaskbar.AppListRect;
                                     taskbars[current].TrayRect = newTaskbar.TrayRect;
                                     Taskbar.UpdateSimpleTaskbar(taskbars[current], settings);
-                                    mw.interaction.AddLog($"Updated taskbar {current} simply");
                                 }
                                 else
                                 {
@@ -473,7 +469,6 @@ namespace RoundedTB
                                         taskbars[current].AppListRect = newTaskbar.AppListRect;
                                         taskbars[current].TrayRect = newTaskbar.TrayRect;
                                         Taskbar.UpdateDynamicTaskbar(taskbars[current], settings);
-                                        mw.interaction.AddLog($"Updated taskbar {current} dynamically");
                                     }
                                 }
                             }

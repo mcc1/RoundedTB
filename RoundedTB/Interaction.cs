@@ -76,13 +76,11 @@ namespace RoundedTB
 
         public void WriteJSON()
         {
-            File.Create(mw.configPath).Close();
             File.WriteAllText(mw.configPath, JsonConvert.SerializeObject(mw.activeSettings, Formatting.Indented));
         }
 
         public void FileSystem()
         {
-            File.Create(mw.logPath).Close();
             if (!File.Exists(mw.configPath))
             {
                 if (mw.isWindows11)
@@ -156,12 +154,6 @@ namespace RoundedTB
             }
 
             return result;
-        }
-
-        public void AddLog(string message)
-        {
-            //m = $"[{DateTime.Now}] {message}\n";
-            //File.AppendAllText(mw.logPath, m);
         }
 
         public static bool IsTranslucentTBRunning()

@@ -44,7 +44,11 @@ namespace RoundedTB
         public List<Types.Taskbar> taskbarDetails = new List<Types.Taskbar>();
         public bool shouldReallyDieNoReally = false;
         public string configPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "rtb.json");
-        public string logPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "rtb.log");
+        // Points at the Serilog rolling-file directory so the About window's
+        // "log" button opens the actual logs. UWP packaging redirects
+        // LocalApplicationData into the package container, so the same
+        // expression resolves correctly in both classic and MSIX builds.
+        public string logPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "RoundedTB", "logs");
         private TaskbarIcon _trayIcon;
         public Types.Settings activeSettings = new Types.Settings();
         public BackgroundWorker taskbarThread = new BackgroundWorker();
@@ -143,7 +147,6 @@ namespace RoundedTB
 #pragma warning disable CS4014
                 StartupInit(true);
                 configPath = Path.Combine(Windows.Storage.ApplicationData.Current.RoamingFolder.Path, "rtb.json");
-                logPath = Path.Combine(Windows.Storage.ApplicationData.Current.RoamingFolder.Path, "rtb.log");
             }
 
             if (!IsRunningAsUWP())
@@ -160,14 +163,6 @@ namespace RoundedTB
 
             // Load settings into memory/UI
             interaction.FileSystem();
-            if (!IsRunningAsUWP())
-            {
-                interaction.AddLog($"RoundedTB started!");
-            }
-            else
-            {
-                interaction.AddLog($"RoundedTB started in UWP mode!");
-            }
             activeSettings = interaction.ReadJSON();
 
             if (isWindows11)
@@ -241,25 +236,6 @@ namespace RoundedTB
             activeSettings.Version = version;
 
 
-            interaction.AddLog($"Settings loaded:");
-            interaction.AddLog(
-                $"SimpleTaskbarLayout: {activeSettings.SimpleTaskbarLayout}\n" +
-                $"DynamicAppListLayout: {activeSettings.DynamicAppListLayout}\n" +
-                $"DynamicTrayLayout: {activeSettings.DynamicTrayLayout}\n" +
-                $"DynamicWidgetsLayout: {activeSettings.DynamicWidgetsLayout}\n" +
-                $"DynamicSecondaryClockLayout: {activeSettings.DynamicSecondaryClockLayout}\n" +
-                $"IsDynamic: {activeSettings.IsDynamic}\n" +
-                $"IsCentred: {activeSettings.IsCentred}\n" +
-                $"ShowTray: {activeSettings.ShowTray}\n" +
-                $"ShowWidgets: {activeSettings.ShowWidgets}\n" +
-                $"ShowSecondaryClock: {activeSettings.ShowSecondaryClock}\n" +
-                $"CompositionCompat: {activeSettings.CompositionCompat}\n" +
-                $"IsNotFirstLaunch: {activeSettings.IsNotFirstLaunch}\n" +
-                $"FillOnMaximise: {activeSettings.FillOnMaximise}\n" +
-                $"FillOnTaskSwitch: {activeSettings.FillOnTaskSwitch}\n" +
-                $"ShowTrayOnHover: {activeSettings.ShowSegmentsOnHover}\n"
-                );
-
             // Checks if advanced margins are configured
             if (activeSettings.IsDynamic)
             {
@@ -300,7 +276,6 @@ namespace RoundedTB
                         {
                             isCentred = false;
                         }
-                        interaction.AddLog($"Taskbar centred? {isCentred}");
                     }
                 }
             }
@@ -587,7 +562,6 @@ namespace RoundedTB
             {
                 Log.Warning(ex, "Taskbar structure changed during exit cleanup");
             }
-            interaction.AddLog("Exiting RoundedTB.");
 
             if (!isAlreadyRunning)
             {
