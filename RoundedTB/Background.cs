@@ -286,6 +286,33 @@ namespace RoundedTB
                                     taskbars[current].HoverStartedAt = null;
                                 }
 
+                                // Symmetric hide dwell: once the taskbar is visible, wait this many ms
+                                // of continuous non-hover before allowing the hide animation to fire.
+                                // Any re-entry into the hover region resets the counter, so the user can
+                                // sweep away and back without triggering a flicker. A dwell of 0 keeps
+                                // the original instant-hide behavior.
+                                double hideHoverMs = settings.HoverHideDelayMs;
+                                bool hoverHideReady = false;
+                                if (!isHoveringOverTaskbar)
+                                {
+                                    if (hideHoverMs <= 0)
+                                    {
+                                        hoverHideReady = true;
+                                    }
+                                    else if (taskbars[current].HoverEndedAt == null)
+                                    {
+                                        taskbars[current].HoverEndedAt = DateTime.UtcNow;
+                                    }
+                                    else if ((DateTime.UtcNow - taskbars[current].HoverEndedAt.Value).TotalMilliseconds >= hideHoverMs)
+                                    {
+                                        hoverHideReady = true;
+                                    }
+                                }
+                                else
+                                {
+                                    taskbars[current].HoverEndedAt = null;
+                                }
+
                                 int animSpeed = 15;
                                 byte taskbarOpacity = 0;
                                 bool glwaOk = LocalPInvoke.GetLayeredWindowAttributes(taskbars[current].TaskbarHwnd, out _, out taskbarOpacity, out _);
@@ -364,10 +391,10 @@ namespace RoundedTB
 #endif
 
                                 // Reveal gate depends on current state:
-                                //  - Hidden: require the 1s hover OR force-show to reveal
-                                //  - Visible: any hover OR force-show keeps it visible
-                                // This prevents the taskbar from fading out mid-hover just because
-                                // the 1s dwell threshold hasn't been met yet.
+                                //  - Hidden: require the reveal-hover dwell OR force-show to reveal
+                                //  - Visible: stay visible while hovering, while force-show is on, or
+                                //    while the hide-hover dwell has not yet elapsed (i.e. the mouse
+                                //    has only been off the taskbar briefly).
                                 bool shouldBeVisible;
                                 if (taskbarOpacity == 1)
                                 {
@@ -375,7 +402,7 @@ namespace RoundedTB
                                 }
                                 else
                                 {
-                                    shouldBeVisible = isHoveringOverTaskbar || forceShow;
+                                    shouldBeVisible = isHoveringOverTaskbar || forceShow || !hoverHideReady;
                                 }
 
                                 if (shouldBeVisible && taskbarOpacity == 1)

@@ -199,7 +199,8 @@ namespace RoundedTB
                         FillOnTaskSwitch = true,
                         ShowSegmentsOnHover = false,
                         AutoHide = 0,
-                        HoverRevealDelayMs = 1000
+                        HoverRevealDelayMs = 1000,
+                        HoverHideDelayMs = 0
                     };
                 }
                 else // Default settings for Windows 10
@@ -224,7 +225,8 @@ namespace RoundedTB
                         FillOnTaskSwitch = false,
                         ShowSegmentsOnHover = false,
                         AutoHide = 0,
-                        HoverRevealDelayMs = 1000
+                        HoverRevealDelayMs = 1000,
+                        HoverHideDelayMs = 0
                     };
                 }
             }
@@ -301,6 +303,8 @@ namespace RoundedTB
             autoHideComboBox.SelectedIndex = activeSettings.AutoHide;
             hoverDelaySlider.Value = activeSettings.HoverRevealDelayMs;
             hoverDelayInput.Text = activeSettings.HoverRevealDelayMs.ToString();
+            hideDelaySlider.Value = activeSettings.HoverHideDelayMs;
+            hideDelayInput.Text = activeSettings.HoverHideDelayMs.ToString();
             widgetWidthInput.Text = activeSettings.WidgetsWidth.ToString();
             clockWidthInput.Text = activeSettings.ClockWidth.ToString();
             taskbarDetails = Taskbar.GenerateTaskbarInfo(isWindows11);
@@ -449,6 +453,7 @@ namespace RoundedTB
 
             activeSettings.AutoHide = autoHideComboBox.SelectedIndex;
             activeSettings.HoverRevealDelayMs = Convert.ToInt32(Math.Round(hoverDelaySlider.Value));
+            activeSettings.HoverHideDelayMs = Convert.ToInt32(Math.Round(hideDelaySlider.Value));
             activeSettings.IsDynamic = (bool)dynamicCheckBox.IsChecked;
             activeSettings.IsCentred = Taskbar.CheckIfCentred();
             activeSettings.ShowTray = (bool)showTrayCheckBox.IsChecked;
@@ -1366,6 +1371,29 @@ namespace RoundedTB
             else
             {
                 hoverDelayInput.Text = Math.Round(hoverDelaySlider.Value).ToString();
+            }
+        }
+
+        private void hideDelaySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (hideDelayInput != null)
+            {
+                hideDelayInput.Text = Math.Round(hideDelaySlider.Value).ToString();
+            }
+        }
+
+        private void hideDelayInput_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (int.TryParse(hideDelayInput.Text, out int ms))
+            {
+                if (ms < hideDelaySlider.Minimum) ms = (int)hideDelaySlider.Minimum;
+                if (ms > hideDelaySlider.Maximum) ms = (int)hideDelaySlider.Maximum;
+                hideDelayInput.Text = ms.ToString();
+                hideDelaySlider.Value = ms;
+            }
+            else
+            {
+                hideDelayInput.Text = Math.Round(hideDelaySlider.Value).ToString();
             }
         }
     }

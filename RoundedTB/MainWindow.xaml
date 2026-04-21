@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:RoundedTB"
         xmlns:tb="http://www.hardcodet.net/taskbar"
         mc:Ignorable="d"
-        Title="RoundedTB - Configuration" Height="510" Width="760"
+        Title="RoundedTB - Configuration" Height="570" Width="760"
         FontSize="12"
         d:Background="DarkGray"
         Visibility = "Visible"
@@ -185,7 +185,13 @@
             <Slider x:Name="hoverDelaySlider" VerticalAlignment="Top" HorizontalAlignment="Left" Width="94" LargeChange="100" SmallChange="50" Focusable="False" Maximum="1000" Minimum="0" Orientation="Horizontal" ValueChanged="hoverDelaySlider_ValueChanged" Margin="0,30,0,0"/>
         </Grid>
 
-        <Grid Width="202" Margin="0,252,10,0"   VerticalAlignment="Top" HorizontalAlignment="Right" Height="45">
+        <Grid Width="202" Margin="0,252,10,0" HorizontalAlignment="Right" VerticalAlignment="Top" Height="60">
+            <Label x:Name="hideDelayLabel" FontSize="12" Content="Hide delay (ms)" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+            <TextBox x:Name="hideDelayInput" FontSize="12" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" HorizontalAlignment="Left" Width="94" Margin="108,19,0,0" LostFocus="hideDelayInput_LostFocus"/>
+            <Slider x:Name="hideDelaySlider" VerticalAlignment="Top" HorizontalAlignment="Left" Width="94" LargeChange="100" SmallChange="50" Focusable="False" Maximum="2000" Minimum="0" Orientation="Horizontal" ValueChanged="hideDelaySlider_ValueChanged" Margin="0,30,0,0"/>
+        </Grid>
+
+        <Grid Width="202" Margin="0,312,10,0"   VerticalAlignment="Top" HorizontalAlignment="Right" Height="45">
             <Label x:Name="widgetWidthLabel" Content="Width" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,0,0" Width="60"  Visibility="Hidden" />
             <TextBox x:Name="widgetWidthInput" FontSize="12" HorizontalAlignment="Left" Margin="0,17,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" Width="60"  Visibility="Hidden" />
             <Label x:Name="clockWidthLabel" Content="Width" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,0,0" Width="60"  Visibility="Hidden" />
@@ -241,7 +247,7 @@
                 <ComboBoxItem FontSize="12">Show on desktop</ComboBoxItem>
             </ComboBox>
         </Grid>
-        <Rectangle HorizontalAlignment="Center" Margin="0,305,0,0" Stroke="#4C909090" Width="740" RadiusX="1" RadiusY="1.5" Height="1" VerticalAlignment="Top"/>
+        <Rectangle HorizontalAlignment="Center" Margin="0,365,0,0" Stroke="#4C909090" Width="740" RadiusX="1" RadiusY="1.5" Height="1" VerticalAlignment="Top"/>
 
     </Grid>
 </Window>

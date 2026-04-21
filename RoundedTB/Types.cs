@@ -32,6 +32,7 @@ namespace RoundedTB
             public TaskbarEffect TaskbarEffectWindow { get; set; } // Unused clone to apply effects to the taskbar
             public bool IsSecondary { get; set; }
             public DateTime? HoverStartedAt { get; set; } // When the mouse first entered the reveal strip while hidden; used to delay auto-reveal.
+            public DateTime? HoverEndedAt { get; set; } // When the mouse most recently left the taskbar while visible; used to delay auto-hide. Reset whenever the mouse re-enters.
 
             public void Dispose()
             {
@@ -235,6 +236,7 @@ namespace RoundedTB
             public bool ShowSegmentsOnHover { get; set; }
             public int AutoHide { get; set; }
             public int HoverRevealDelayMs { get; set; } // 0 = reveal immediately, >0 = hover for this many ms before autohide reveals
+            public int HoverHideDelayMs { get; set; } // 0 = hide immediately once mouse leaves, >0 = wait this many ms of continuous non-hover before hiding
         }
 
         public class EffectiveRegion

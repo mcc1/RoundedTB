@@ -104,7 +104,8 @@ namespace RoundedTB
                         FillOnTaskSwitch = true,
                         ShowSegmentsOnHover = false,
                         AutoHide = 0,
-                        HoverRevealDelayMs = 1000
+                        HoverRevealDelayMs = 1000,
+                        HoverHideDelayMs = 0
                     };
                 }
                 else
@@ -128,7 +129,8 @@ namespace RoundedTB
                         FillOnTaskSwitch = false,
                         ShowSegmentsOnHover = false,
                         AutoHide = 0,
-                        HoverRevealDelayMs = 1000
+                        HoverRevealDelayMs = 1000,
+                        HoverHideDelayMs = 0
                     };
                 }
 
