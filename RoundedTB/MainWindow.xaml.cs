@@ -1346,18 +1346,43 @@ namespace RoundedTB
             }
         }
 
-        private void cornerRadiusSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            cornerRadiusInput.Text = Math.Round(cornerRadiusSlider.Value).ToString();
-        }
+        // Shared by every slider/input mirror pair below. WPF dispatches UI
+        // events on a single thread so one guard is enough to break the
+        // TextChanged -> ValueChanged -> TextChanged loop; each direction
+        // flips the flag around the assignment that would otherwise re-enter.
+        private bool _syncingSliderInput = false;
 
-        private void hoverDelaySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        private void SyncTextToSlider(TextBox input, Slider slider)
         {
-            if (hoverDelayInput != null)
+            if (_syncingSliderInput) return;
+            if (int.TryParse(input.Text, out int v)
+                && v >= slider.Minimum && v <= slider.Maximum)
             {
-                hoverDelayInput.Text = Math.Round(hoverDelaySlider.Value).ToString();
+                _syncingSliderInput = true;
+                try { slider.Value = v; }
+                finally { _syncingSliderInput = false; }
             }
         }
+
+        private void SyncSliderToText(Slider slider, TextBox input)
+        {
+            if (_syncingSliderInput || input == null) return;
+            _syncingSliderInput = true;
+            try { input.Text = Math.Round(slider.Value).ToString(); }
+            finally { _syncingSliderInput = false; }
+        }
+
+        private void cornerRadiusSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+            => SyncSliderToText(cornerRadiusSlider, cornerRadiusInput);
+
+        private void cornerRadiusInput_TextChanged(object sender, TextChangedEventArgs e)
+            => SyncTextToSlider(cornerRadiusInput, cornerRadiusSlider);
+
+        private void hoverDelaySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+            => SyncSliderToText(hoverDelaySlider, hoverDelayInput);
+
+        private void hoverDelayInput_TextChanged(object sender, TextChangedEventArgs e)
+            => SyncTextToSlider(hoverDelayInput, hoverDelaySlider);
 
         private void hoverDelayInput_LostFocus(object sender, RoutedEventArgs e)
         {
@@ -1375,12 +1400,10 @@ namespace RoundedTB
         }
 
         private void hideDelaySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (hideDelayInput != null)
-            {
-                hideDelayInput.Text = Math.Round(hideDelaySlider.Value).ToString();
-            }
-        }
+            => SyncSliderToText(hideDelaySlider, hideDelayInput);
+
+        private void hideDelayInput_TextChanged(object sender, TextChangedEventArgs e)
+            => SyncTextToSlider(hideDelayInput, hideDelaySlider);
 
         private void hideDelayInput_LostFocus(object sender, RoutedEventArgs e)
         {

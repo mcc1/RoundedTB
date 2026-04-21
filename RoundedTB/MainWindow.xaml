@@ -172,7 +172,7 @@
 
         <Grid Margin="0,0,10,0" HorizontalAlignment="Right" Width="202" Height="60" VerticalAlignment="Top">
             <Label x:Name="cornerRadiusLabel" FontSize="12" Content="Corner radius" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-            <TextBox x:Name="cornerRadiusInput" FontSize="12" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" HorizontalAlignment="Left" Width="94" Margin="108,19,0,0" LostFocus="cornerRadiusInput_LostFocus"/>
+            <TextBox x:Name="cornerRadiusInput" FontSize="12" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" HorizontalAlignment="Left" Width="94" Margin="108,19,0,0" TextChanged="cornerRadiusInput_TextChanged" LostFocus="cornerRadiusInput_LostFocus"/>
             <Slider x:Name="cornerRadiusSlider" VerticalAlignment="Top" HorizontalAlignment="Left" Width="94" LargeChange="0" SmallChange="1" Focusable="False" Maximum="48" Orientation="Horizontal" Thumb.DragCompleted="cornerRadiusSlider_DragCompleted" ValueChanged="cornerRadiusSlider_ValueChanged" Margin="0,30,0,0"/>
         </Grid>
 
@@ -181,13 +181,13 @@
 
         <Grid Width="202" Margin="0,190,10,0" HorizontalAlignment="Right" VerticalAlignment="Top" Height="60">
             <Label x:Name="hoverDelayLabel" FontSize="12" Content="Hover reveal (ms)" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-            <TextBox x:Name="hoverDelayInput" FontSize="12" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" HorizontalAlignment="Left" Width="94" Margin="108,19,0,0" LostFocus="hoverDelayInput_LostFocus"/>
+            <TextBox x:Name="hoverDelayInput" FontSize="12" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" HorizontalAlignment="Left" Width="94" Margin="108,19,0,0" TextChanged="hoverDelayInput_TextChanged" LostFocus="hoverDelayInput_LostFocus"/>
             <Slider x:Name="hoverDelaySlider" VerticalAlignment="Top" HorizontalAlignment="Left" Width="94" LargeChange="100" SmallChange="50" Focusable="False" Maximum="1000" Minimum="0" Orientation="Horizontal" ValueChanged="hoverDelaySlider_ValueChanged" Margin="0,30,0,0"/>
         </Grid>
 
         <Grid Width="202" Margin="0,252,10,0" HorizontalAlignment="Right" VerticalAlignment="Top" Height="60">
             <Label x:Name="hideDelayLabel" FontSize="12" Content="Hide delay (ms)" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-            <TextBox x:Name="hideDelayInput" FontSize="12" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" HorizontalAlignment="Left" Width="94" Margin="108,19,0,0" LostFocus="hideDelayInput_LostFocus"/>
+            <TextBox x:Name="hideDelayInput" FontSize="12" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" HorizontalAlignment="Left" Width="94" Margin="108,19,0,0" TextChanged="hideDelayInput_TextChanged" LostFocus="hideDelayInput_LostFocus"/>
             <Slider x:Name="hideDelaySlider" VerticalAlignment="Top" HorizontalAlignment="Left" Width="94" LargeChange="100" SmallChange="50" Focusable="False" Maximum="2000" Minimum="0" Orientation="Horizontal" ValueChanged="hideDelaySlider_ValueChanged" Margin="0,30,0,0"/>
         </Grid>
 
