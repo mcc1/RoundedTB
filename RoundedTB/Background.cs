@@ -50,15 +50,15 @@ namespace RoundedTB
         bool redrawOverride = false;
         int infrequentCount = 0;
 
+#if DEBUG
         // Diagnostic state for autohide. Tracked per-taskbar by index so we
-        // only log on transitions (not every 100ms tick). Goal: capture the
-        // moment autohide silently stops so we can tell WS_EX_LAYERED loss
-        // from a stuck opacity value from a worker-side exception.
-        private readonly Dictionary<int, bool> _lastTaskbarHidden = new();
+        // only log on transitions (not every 100ms tick). Debug-only so
+        // Release/Canary builds don't spend cycles or disk on chatter.
         private readonly Dictionary<int, byte> _lastLoggedOpacity = new();
         private readonly Dictionary<int, bool> _lastLoggedLayeredMissing = new();
         private readonly Dictionary<int, bool> _lastLoggedGLWAFailed = new();
         private bool _loggedAutohideEntered = false;
+#endif
 
         public Background()
         {
@@ -75,14 +75,17 @@ namespace RoundedTB
         public void DoWork(object sender, DoWorkEventArgs e)
         {
             mw.interaction.AddLog("in bw");
-            Log.Information("Background worker started");
             BackgroundWorker worker = sender as BackgroundWorker;
+#if DEBUG
+            Log.Information("Background worker started");
             int heartbeatCount = 0;
             DateTime lastHeartbeat = DateTime.UtcNow;
+#endif
             while (true)
             {
+#if DEBUG
                 // Heartbeat every ~60s so if the worker hangs or dies we can see the
-                // last timestamp. Cheap: just a counter + clock compare.
+                // last timestamp. Debug-only so Release logs stay clean.
                 heartbeatCount++;
                 if (heartbeatCount >= 600)
                 {
@@ -91,6 +94,7 @@ namespace RoundedTB
                     Log.Debug("Background worker heartbeat (interval={Seconds:0.0}s)", (now - lastHeartbeat).TotalSeconds);
                     lastHeartbeat = now;
                 }
+#endif
                 try
                 {
                     if (worker.CancellationPending == true)
@@ -288,13 +292,14 @@ namespace RoundedTB
                                 byte taskbarOpacity = 0;
                                 bool glwaOk = LocalPInvoke.GetLayeredWindowAttributes(taskbars[current].TaskbarHwnd, out _, out taskbarOpacity, out _);
 
-                                // --- Diagnostic logging (state transitions only, never per-tick) ---
+#if DEBUG
                                 if (!_loggedAutohideEntered)
                                 {
                                     Log.Debug("Autohide block active. AutoHide={Auto} taskbarCount={Count}",
                                         settings.AutoHide, taskbars.Count);
                                     _loggedAutohideEntered = true;
                                 }
+#endif
 
                                 int exStyle = LocalPInvoke.GetWindowLong(taskbars[current].TaskbarHwnd, LocalPInvoke.GWL_EXSTYLE).ToInt32();
                                 bool layeredMissing = (exStyle & LocalPInvoke.WS_EX_LAYERED) != LocalPInvoke.WS_EX_LAYERED;
@@ -315,7 +320,7 @@ namespace RoundedTB
                                     LocalPInvoke.SetLayeredWindowAttributes(
                                         taskbars[current].TaskbarHwnd, 0, 255, LocalPInvoke.LWA_ALPHA);
                                     taskbars[current].TaskbarHidden = false;
-
+#if DEBUG
                                     if (!_lastLoggedLayeredMissing.GetValueOrDefault(current))
                                     {
                                         Log.Warning(
@@ -323,8 +328,10 @@ namespace RoundedTB
                                             current, taskbars[current].TaskbarHwnd.ToInt64());
                                         _lastLoggedLayeredMissing[current] = true;
                                     }
+#endif
                                     continue;
                                 }
+#if DEBUG
                                 else if (_lastLoggedLayeredMissing.GetValueOrDefault(current))
                                 {
                                     Log.Information("Autohide: WS_EX_LAYERED stable again on taskbar {Idx}", current);
@@ -356,7 +363,7 @@ namespace RoundedTB
                                     Log.Warning("Autohide: unexpected opacity {Opacity} on taskbar {Idx}", taskbarOpacity, current);
                                 }
                                 _lastLoggedOpacity[current] = taskbarOpacity;
-                                // --- end diagnostic ---
+#endif
 
                                 // Reveal gate depends on current state:
                                 //  - Hidden: require the 1s hover OR force-show to reveal
@@ -390,7 +397,9 @@ namespace RoundedTB
                                     taskbars[current].Ignored = true;
                                     taskbars[current].TaskbarHidden = false;
                                     Debug.WriteLine("MouseOver TB");
+#if DEBUG
                                     Log.Debug("Autohide reveal on taskbar {Idx} (forceShow={ForceShow}, hoverReady={Hover})", current, forceShow, hoverRevealReady);
+#endif
                                 }
                                 else if (!shouldBeVisible && taskbarOpacity == 255)
                                 {
@@ -409,7 +418,9 @@ namespace RoundedTB
                                     taskbars[current].Ignored = true;
                                     taskbars[current].TaskbarHidden = true;
                                     Debug.WriteLine("MouseOff TB");
+#if DEBUG
                                     Log.Debug("Autohide hide on taskbar {Idx} (forceShow={ForceShow}, hover={Hover})", current, forceShow, isHoveringOverTaskbar);
+#endif
                                 }
                             }
                             else
