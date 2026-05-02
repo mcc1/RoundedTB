@@ -4,9 +4,21 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      release_build:
+        description: 'Build with RTB_RELEASE=true (official icon + branding). Auto-true on release events.'
+        type: boolean
+        default: true
 
 permissions:
   contents: write
+
+# Resolved once and reused everywhere so the wapproj, the explicit portable
+# build, and the path-detection in the staging step all agree. Release events
+# always force it on; workflow_dispatch lets the operator pick (default true
+# so manual backfills match what releases ship).
+env:
+  RTB_RELEASE: ${{ github.event_name == 'release' || inputs.release_build == true }}
 
 jobs:
   build-msix:
@@ -25,7 +37,7 @@ jobs:
         dotnet-version: '10.0.x'
 
     - name: Restore
-      run: msbuild RoundedTB.sln /t:Restore /p:Configuration=Release /p:Platform=x64 /p:TargetPlatformVersion=10.0.26100.0 /p:RTB_RELEASE=${{ github.event_name == 'release' }}
+      run: msbuild RoundedTB.sln /t:Restore /p:Configuration=Release /p:Platform=x64 /p:TargetPlatformVersion=10.0.26100.0 /p:RTB_RELEASE=${{ env.RTB_RELEASE }}
 
     - name: Decode signing certificate
       shell: pwsh
@@ -44,9 +56,16 @@ jobs:
           /p:UapAppxPackageBuildMode=SideloadOnly `
           /p:AppxPackageSigningEnabled=True `
           /p:TargetPlatformVersion=10.0.26100.0 `
-          /p:RTB_RELEASE=${{ github.event_name == 'release' }} `
+          /p:RTB_RELEASE=${{ env.RTB_RELEASE }} `
           /p:PackageCertificateKeyFile="$((Resolve-Path RoundedTB.pfx).Path)" `
           /p:PackageCertificatePassword="${{ secrets.PFX_PASSWORD }}"
+
+    # The wapproj packaging path doesn't reliably leave loose binaries at
+    # RoundedTB\bin\<config>\<tfm>\, so build the project explicitly here. It's
+    # incremental (most work is cached from the wapproj run) and gives the zip
+    # step a known-good source folder regardless of how MSIX is configured.
+    - name: Build portable RoundedTB
+      run: dotnet build RoundedTB\RoundedTB.csproj -c Release -p:RTB_RELEASE=${{ env.RTB_RELEASE }}
 
     - name: Locate output bundle
       id: find-msix
@@ -75,15 +94,22 @@ jobs:
         Copy-Item "${{ steps.find-msix.outputs.path }}" $stage
         Copy-Item "RoundedTB.cer" $stage
 
-        # Portable zip: bundle the loose RTB_RELEASE binaries the wapproj
-        # build already produced at bin\Release-RTB\<tfm>\. Tag drives the
-        # filename so it matches the README convention RoundedTB-vX.Y.zip;
-        # workflow_dispatch runs (no tag) fall back to "dev" so the artifact
-        # upload still succeeds.
-        $portableSrc = "RoundedTB\bin\Release-RTB\net10.0-windows10.0.19041"
+        # Portable zip: the explicit "Build portable RoundedTB" step above
+        # leaves loose binaries at one of two paths depending on whether
+        # RTB_RELEASE is on (csproj redirects OutputPath to bin\<cfg>-RTB\
+        # only when the constant is defined). Pick the matching folder so
+        # release builds and dispatch-with-release_build=false both work.
+        # Tag drives the filename so it matches the README convention
+        # RoundedTB-vX.Y.zip; workflow_dispatch runs (no tag) fall back to
+        # "dev" so the artifact upload still succeeds.
+        $portableSrc = if ("${{ env.RTB_RELEASE }}" -eq 'true') {
+            "RoundedTB\bin\Release-RTB\net10.0-windows10.0.19041"
+        } else {
+            "RoundedTB\bin\Release\net10.0-windows10.0.19041"
+        }
         if (-not (Test-Path $portableSrc))
         {
-            throw "Portable build output not found at $portableSrc — did the MSIX build run with RTB_RELEASE=true?"
+            throw "Portable build output not found at $portableSrc — did the 'Build portable RoundedTB' step succeed?"
         }
         $tag = "${{ github.event.release.tag_name }}"
         if (-not $tag) { $tag = "dev" }
