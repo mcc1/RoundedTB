@@ -74,6 +74,21 @@ jobs:
         New-Item -ItemType Directory -Force -Path $stage | Out-Null
         Copy-Item "${{ steps.find-msix.outputs.path }}" $stage
         Copy-Item "RoundedTB.cer" $stage
+
+        # Portable zip: bundle the loose RTB_RELEASE binaries the wapproj
+        # build already produced at bin\Release-RTB\<tfm>\. Tag drives the
+        # filename so it matches the README convention RoundedTB-vX.Y.zip;
+        # workflow_dispatch runs (no tag) fall back to "dev" so the artifact
+        # upload still succeeds.
+        $portableSrc = "RoundedTB\bin\Release-RTB\net10.0-windows10.0.19041"
+        if (-not (Test-Path $portableSrc))
+        {
+            throw "Portable build output not found at $portableSrc — did the MSIX build run with RTB_RELEASE=true?"
+        }
+        $tag = "${{ github.event.release.tag_name }}"
+        if (-not $tag) { $tag = "dev" }
+        $zipPath = Join-Path $stage "RoundedTB-$tag.zip"
+        Compress-Archive -Path "$portableSrc\*" -DestinationPath $zipPath -Force
         $install = @'
         RoundedTB MSIX - Installation Guide
         ====================================
