@@ -14,13 +14,13 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
+      uses: microsoft/setup-msbuild@v3
 
     - name: Setup .NET 10
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v5
       with:
         dotnet-version: '10.0.x'
 
@@ -105,13 +105,13 @@ jobs:
         echo "dir=$stage" >> $env:GITHUB_OUTPUT
 
     - name: Upload MSIX artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: RoundedTB-MSIX
         path: ${{ steps.stage.outputs.dir }}/*
 
     - name: Attach MSIX to release
       if: github.event_name == 'release'
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       with:
         files: ${{ steps.stage.outputs.dir }}/*
