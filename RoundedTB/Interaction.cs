@@ -56,10 +56,31 @@ namespace RoundedTB
         {
             string jsonSettings = File.ReadAllText(mw.configPath);
             Types.Settings settings = JsonConvert.DeserializeObject<Types.Settings>(jsonSettings);
-            // compatible old settings 
+            // compatible old settings
             if (settings.DynamicSecondaryClockLayout == null)
             {
                 settings.DynamicSecondaryClockLayout = new Types.SegmentSettings { CornerRadius = 7, MarginLeft = 3, MarginTop = 3, MarginRight = 3, MarginBottom = 3 };
+            }
+
+            // Migrate the legacy single Settings.AutoHide into each segment's own AutoHide.
+            // Older configs only carried one autohide value covering the whole taskbar; if
+            // the per-segment fields are still defaulted (all 0) and the legacy value is
+            // non-zero, copy it into every segment so the user keeps the same behaviour.
+            // The legacy field is then zeroed so subsequent applies don't keep overriding.
+            if (settings.AutoHide > 0
+                && settings.SimpleTaskbarLayout != null && settings.SimpleTaskbarLayout.AutoHide == 0
+                && settings.DynamicAppListLayout != null && settings.DynamicAppListLayout.AutoHide == 0
+                && settings.DynamicTrayLayout != null && settings.DynamicTrayLayout.AutoHide == 0
+                && settings.DynamicWidgetsLayout != null && settings.DynamicWidgetsLayout.AutoHide == 0
+                && settings.DynamicSecondaryClockLayout != null && settings.DynamicSecondaryClockLayout.AutoHide == 0)
+            {
+                int legacy = settings.AutoHide;
+                settings.SimpleTaskbarLayout.AutoHide = legacy;
+                settings.DynamicAppListLayout.AutoHide = legacy;
+                settings.DynamicTrayLayout.AutoHide = legacy;
+                settings.DynamicWidgetsLayout.AutoHide = legacy;
+                settings.DynamicSecondaryClockLayout.AutoHide = legacy;
+                settings.AutoHide = 0;
             }
             return settings;
         }

@@ -290,6 +290,20 @@ namespace RoundedTB
                     centredDistanceFromEdge -= Convert.ToInt32(20 * taskbar.ScaleFactor);
                 }
 
+                // Per-segment dynamic-mode autohide: the background worker maintains
+                // DynAppListVisible / DynTrayVisible / DynWidgetsVisible / DynClockVisible
+                // and forces a region rebuild whenever any of them flip. When a segment is
+                // hidden we just skip its contribution to the working region; the cursor
+                // then passes straight through (the taskbar window already has alpha=255
+                // and no WS_EX_TRANSPARENT flag, so click-through requires the region to
+                // actually omit the pixels). If AppList itself is hidden, seed the region
+                // empty so the other segments — if any — still composite correctly on top.
+                if (!taskbar.DynAppListVisible)
+                {
+                    workingRegion = LocalPInvoke.CreateRectRgn(0, 0, 0, 0);
+                }
+                else
+
                 // Create region for if the taskbar is centred by take the right-to-right distance (centredDistanceFromEdge) off from both sides, as well as the margin
                 if (settings.IsCentred)
                 {
@@ -337,7 +351,7 @@ namespace RoundedTB
                         );
                 }
 
-                if (settings.ShowSecondaryClock && taskbar.IsSecondary)
+                if (settings.ShowSecondaryClock && taskbar.IsSecondary && taskbar.DynClockVisible)
                 {
                     clockRegion = LocalPInvoke.CreateRoundRectRgn(
                         secondaryClockRegion.Left,
@@ -351,7 +365,7 @@ namespace RoundedTB
                 }
 
                 // If the user has it enabled and the tray handle isn't null, create a region for the system tray and merge it with the taskbar region
-                if (settings.ShowTray && taskbar.TrayHwnd != IntPtr.Zero)
+                if (settings.ShowTray && taskbar.TrayHwnd != IntPtr.Zero && taskbar.DynTrayVisible)
                 {
                     trayRegion = LocalPInvoke.CreateRoundRectRgn(
                         (taskbar.TrayRect.Left - taskbar.TaskbarRect.Left) - trayEffectiveRegion.Left,
@@ -365,7 +379,7 @@ namespace RoundedTB
                     LocalPInvoke.CombineRgn(workingRegion, trayRegion, workingRegion, 2);
                 }
 
-                if (settings.ShowWidgets)
+                if (settings.ShowWidgets && taskbar.DynWidgetsVisible)
                 {
                     widgetsRegion = LocalPInvoke.CreateRoundRectRgn(
                         widgetsEffectiveRegion.Left,
