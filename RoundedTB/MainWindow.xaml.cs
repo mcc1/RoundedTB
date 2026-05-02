@@ -60,7 +60,12 @@ namespace RoundedTB
         public Background background;
         public Interaction interaction;
         private HwndSource source;
-        private int lastAppliedAutoHide = -1;
+        // Was an int tracking the legacy single AutoHide value. Now a nullable bool
+        // tracking whether ANY segment in the active mode (simple vs dynamic) has
+        // autohide enabled, since per-segment hides are coordinated by the background
+        // worker but the AlwaysOnTop / work-area side-effects are still per-window.
+        // null = not yet applied (skip the false→false noop on first launch).
+        private bool? lastAppliedAnyAutoHide = null;
         public int selectedSegment = 0; // 0 = Simple, 1 = AppList, 2 = Tray, 3 = Widgets
         /// <summary>
         /// Versions:
@@ -300,7 +305,7 @@ namespace RoundedTB
             fillAltTabCheckBox.IsChecked = activeSettings.FillOnTaskSwitch;
             showSegmentsOnHoverCheckBox.IsChecked = activeSettings.ShowSegmentsOnHover;
             compositionFixCheckBox.IsChecked = activeSettings.CompositionCompat;
-            autoHideComboBox.SelectedIndex = activeSettings.AutoHide;
+            autoHideComboBox.SelectedIndex = GetSelectedSegmentLayout()?.AutoHide ?? 0;
             hoverDelaySlider.Value = activeSettings.HoverRevealDelayMs;
             hoverDelayInput.Text = activeSettings.HoverRevealDelayMs.ToString();
             hideDelaySlider.Value = activeSettings.HoverHideDelayMs;
@@ -401,11 +406,9 @@ namespace RoundedTB
             // windows. Users who position apps over the taskbar area continue to
             // see them render there (with the taskbar fading to opacity=0 via the
             // background worker), and the push-up symptom is gone.
-            Log.Information(
-                "AutoHide(enabled={Enabled}) called. activeSettings.AutoHide={Auto}",
-                enabled, activeSettings.AutoHide);
+            Log.Information("AutoHide(enabled={Enabled}) called.", enabled);
 
-            if (activeSettings.AutoHide > 0 && enabled)
+            if (enabled)
             {
                 foreach (Types.Taskbar taskbar in taskbarDetails)
                 {
@@ -451,7 +454,9 @@ namespace RoundedTB
             activeSettings.WidgetsWidth = widgetWidth;
             activeSettings.ClockWidth = clockWidth;
 
-            activeSettings.AutoHide = autoHideComboBox.SelectedIndex;
+            // The combo box now mirrors the currently-selected segment's AutoHide via
+            // autoHideComboBox_SelectionChanged. Each segment's value is written there,
+            // so we no longer fold a single value into a global Settings.AutoHide.
             activeSettings.HoverRevealDelayMs = Convert.ToInt32(Math.Round(hoverDelaySlider.Value));
             activeSettings.HoverHideDelayMs = Convert.ToInt32(Math.Round(hideDelaySlider.Value));
             activeSettings.IsDynamic = (bool)dynamicCheckBox.IsChecked;
@@ -514,23 +519,26 @@ namespace RoundedTB
                 taskbarThread.RunWorkerAsync((mt, ml, mb, mr, 0));
             }
 
-            if (lastAppliedAutoHide != activeSettings.AutoHide)
+            // Drive the per-window AlwaysOnTop / work-area flip off "any segment hides"
+            // rather than the legacy single AutoHide. The actual per-segment show/hide
+            // happens in the background worker via region clipping; this block only
+            // covers the once-per-transition side effects on the taskbar window itself.
+            bool nowAnyAutoHide = AnyAutoHideEnabled();
+            if (lastAppliedAnyAutoHide != nowAnyAutoHide)
             {
-                if (activeSettings.AutoHide > 0)
+                if (nowAnyAutoHide)
                 {
-                    // Enabling autohide always needs to run (expand work area, set AlwaysOnTop).
                     AutoHide(true, taskbarDetails);
                 }
-                else if (lastAppliedAutoHide > 0)
+                else if (lastAppliedAnyAutoHide == true)
                 {
-                    // Transitioning FROM autohide back to "Always show" — restore normal
-                    // work area. Skip when lastAppliedAutoHide < 0 (first apply at startup
-                    // with AutoHide=0): the OS is already in normal state and calling
-                    // SetWorkspace would broadcast WM_SETTINGCHANGE, which re-flows
-                    // foreground windows upward — the symptom the user was seeing.
+                    // Only restore when we previously enabled it. Skipping the null→false
+                    // path matters: at startup with no autohide configured, the OS work
+                    // area is already correct and calling SetWorkspace would broadcast
+                    // WM_SETTINGCHANGE, re-flowing foreground windows upward.
                     AutoHide(false, taskbarDetails);
                 }
-                lastAppliedAutoHide = activeSettings.AutoHide;
+                lastAppliedAnyAutoHide = nowAnyAutoHide;
             }
             interaction.WriteJSON();
             UpdateUi();
@@ -572,7 +580,7 @@ namespace RoundedTB
                 {
                     Taskbar.ResetTaskbar(tbDeets, activeSettings);
                 }
-                if (activeSettings.AutoHide > 0)
+                if (lastAppliedAnyAutoHide == true)
                 {
                     AutoHide(false, taskbarDetails);
                 }
@@ -1156,6 +1164,56 @@ namespace RoundedTB
             mLeftInput.Text = layout.MarginLeft.ToString();
             mBottomInput.Text = layout.MarginBottom.ToString();
             mRightInput.Text = layout.MarginRight.ToString();
+            // Mirror the corner-radius / margin pattern: when the user clicks a different
+            // segment standin, the autohide combo follows along to that segment's value.
+            // The SelectionChanged handler then writes back to the same segment, which is
+            // a no-op (we just set it from the same source), so this doesn't cause loops.
+            autoHideComboBox.SelectedIndex = layout.AutoHide;
+        }
+
+        // Maps the current selectedSegment to the matching SegmentSettings instance so
+        // the combo-box and other shared inputs can read/write the right field without
+        // duplicating the switch in every handler.
+        private Types.SegmentSettings GetSelectedSegmentLayout()
+        {
+            return selectedSegment switch
+            {
+                0 => activeSettings.SimpleTaskbarLayout,
+                1 => activeSettings.DynamicAppListLayout,
+                2 => activeSettings.DynamicTrayLayout,
+                3 => activeSettings.DynamicWidgetsLayout,
+                4 => activeSettings.DynamicSecondaryClockLayout,
+                _ => null,
+            };
+        }
+
+        // True if any segment that's in play for the current mode has autohide enabled.
+        // Used to drive the once-per-transition AlwaysOnTop / work-area side effects;
+        // the actual show/hide of individual segments lives in the background worker.
+        private bool AnyAutoHideEnabled()
+        {
+            if (activeSettings.IsDynamic)
+            {
+                return (activeSettings.DynamicAppListLayout?.AutoHide ?? 0) > 0
+                    || (activeSettings.DynamicTrayLayout?.AutoHide ?? 0) > 0
+                    || (activeSettings.DynamicWidgetsLayout?.AutoHide ?? 0) > 0
+                    || (activeSettings.DynamicSecondaryClockLayout?.AutoHide ?? 0) > 0;
+            }
+            return (activeSettings.SimpleTaskbarLayout?.AutoHide ?? 0) > 0;
+        }
+
+        private void autoHideComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            int idx = autoHideComboBox.SelectedIndex;
+            if (idx < 0)
+            {
+                return;
+            }
+            Types.SegmentSettings layout = GetSelectedSegmentLayout();
+            if (layout != null)
+            {
+                layout.AutoHide = idx;
+            }
         }
 
         private void taskbarRectStandIn_Click(object sender, RoutedEventArgs e)

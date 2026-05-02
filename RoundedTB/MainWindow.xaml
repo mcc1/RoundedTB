@@ -241,7 +241,7 @@
 
         <Grid Margin="0,0,10,83" HorizontalAlignment="Right" Width="180" Height="50" VerticalAlignment="Bottom">
             <Label Content="Auto-hide" Height="20" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-            <ComboBox x:Name="autoHideComboBox" FontSize="12" Margin="0,18,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="180">
+            <ComboBox x:Name="autoHideComboBox" FontSize="12" Margin="0,18,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="180" SelectionChanged="autoHideComboBox_SelectionChanged">
                 <ComboBoxItem FontSize="12">Always show</ComboBoxItem>
                 <ComboBoxItem FontSize="12">Always hide</ComboBoxItem>
                 <ComboBoxItem FontSize="12">Show on desktop</ComboBoxItem>

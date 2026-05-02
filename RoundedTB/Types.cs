@@ -34,6 +34,26 @@ namespace RoundedTB
             public DateTime? HoverStartedAt { get; set; } // When the mouse first entered the reveal strip while hidden; used to delay auto-reveal.
             public DateTime? HoverEndedAt { get; set; } // When the mouse most recently left the taskbar while visible; used to delay auto-hide. Reset whenever the mouse re-enters.
 
+            // Per-segment last-applied visibility for dynamic-mode region clipping. The
+            // background worker compares "should be visible right now" against these to
+            // decide whether to rebuild the SetWindowRgn region. Defaults to true so the
+            // first apply matches the user's normal expectation of segments showing up.
+            public bool DynAppListVisible { get; set; } = true;
+            public bool DynTrayVisible { get; set; } = true;
+            public bool DynWidgetsVisible { get; set; } = true;
+            public bool DynClockVisible { get; set; } = true;
+
+            // Hover dwell timers, one pair per autohide group. Segments sharing the same
+            // AutoHide value (1 = "Always hide", 2 = "Show on desktop") form a group whose
+            // members reveal together when the user hovers anywhere over the group's union
+            // region. Tracked per taskbar so multi-monitor setups stay independent.
+            public DateTime? Group1HoverStartedAt { get; set; }
+            public DateTime? Group1HoverEndedAt { get; set; }
+            public DateTime? Group2HoverStartedAt { get; set; }
+            public DateTime? Group2HoverEndedAt { get; set; }
+            public bool Group1Revealed { get; set; }
+            public bool Group2Revealed { get; set; }
+
             public void Dispose()
             {
                 AppListXaml.Dispose();
@@ -263,6 +283,11 @@ namespace RoundedTB
             public int MarginLeft { get; set; }
             public int MarginBottom { get; set; }
             public int MarginRight { get; set; }
+            // 0 = Always show, 1 = Always hide, 2 = Show on desktop. Per-segment in
+            // dynamic mode so the user can pin (e.g.) the system tray while letting
+            // the app list autohide. In simple mode only SimpleTaskbarLayout.AutoHide
+            // is consulted and acts on the whole taskbar window.
+            public int AutoHide { get; set; }
         }
 
         public enum TrayMode
