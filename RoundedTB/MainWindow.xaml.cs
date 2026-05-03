@@ -314,6 +314,12 @@ namespace RoundedTB
             clockWidthInput.Text = activeSettings.ClockWidth.ToString();
             taskbarDetails = Taskbar.GenerateTaskbarInfo(isWindows11);
 
+            // Seed TTB detection before the first ApplyButton_Click so the initial
+            // region updates already gate UpdateTranslucentTB correctly. The background
+            // worker refreshes this every ~1s once it's running, but the first apply
+            // happens here in the constructor, before the worker has had a chance.
+            activeSettings.TtbRunning = Interaction.IsTranslucentTBRunning();
+
             ApplyButton_Click(null, null);
 
 
@@ -351,7 +357,19 @@ namespace RoundedTB
             }
 
             UpdateUi();
+            RefreshTtbStatusUi();
 
+            // Mirror the background worker's ~1s detection refresh into the
+            // settings UI so the "TranslucentTB: detected" indicator follows
+            // reality without the user having to close+reopen the window.
+            // 1500 ms gives the worker (which polls every ~1000 ms) at least
+            // one tick of headroom before we sample its result.
+            DispatcherTimer ttbStatusTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(1500),
+            };
+            ttbStatusTimer.Tick += (s, e) => RefreshTtbStatusUi();
+            ttbStatusTimer.Start();
         }
 
         public void UpdateUi()
@@ -1110,11 +1128,52 @@ namespace RoundedTB
             {
                 Infobox ib = new Infobox();
                 ib.Height = 450;
-                ib.Title = "RoundedTB - TranslucentTB compatibility";
-                ib.titleBlock.Text = "Compatibility with TranslucentTB";
-                ib.bodyBlock.Text = "\nTranslucentTB is a utility that allows you to customise the opacity, blur and colour of the taskbar seamlessly with significantly finer control than other tools. Enable this option to allow RoundedTB and TranslucentTB to work together.\n\nThis is necessary due to a bug in Windows (it's not the fault of RoundedTB or TranslucentTB), and you might encounter some minor flickering when the taskbar \"updates\" (changes size, roundness or position). This is usually pretty minimal and many people use RoundedTB and TranslucentTB in tandem without complaint, but if it bothers you then I recommend sticking with either RoundedTB or TranslucentTB until a better solution is available.\n\nRegardless though, go show TranslucentTB some love! It's the OG Windows 10 aesthetic taskbar mod, the first one on the Microsoft Store and the project that inspired me to make RoundedTB. Plus, the dev is pretty awesome 💖";
+                ib.Title = "RoundedTB - TranslucentTB integration";
+                ib.titleBlock.Text = "Working with TranslucentTB";
+                ib.bodyBlock.Text = "\nTranslucentTB customises the opacity, blur and colour of the taskbar with finer control than RoundedTB itself. Leaving this option enabled lets the two work together: RoundedTB tells TranslucentTB to redraw whenever it reshapes the taskbar.\n\nThe integration only fires when TranslucentTB is actually running — RoundedTB now auto-detects it, so installing or quitting TranslucentTB while RoundedTB is up just works.\n\nThe handoff is necessary because of how Windows composites the taskbar; you might see minor flicker when the taskbar reshapes. If it bothers you, uncheck this box to disable the integration.\n\nGet TranslucentTB from the Microsoft Store: https://www.microsoft.com/store/apps/9PF1B3WTQ6LP";
                 ib.ShowDialog();
             }
+        }
+
+        // Updates the inline TranslucentTB status indicator below the integration
+        // checkbox. Called from a DispatcherTimer so the text follows TtbRunning
+        // (refreshed by the background worker every ~1s) without bouncing through
+        // INotifyPropertyChanged plumbing for one read-only label.
+        private void RefreshTtbStatusUi()
+        {
+            if (ttbStatusText == null || ttbStatusLink == null)
+            {
+                return;
+            }
+            bool running = activeSettings?.TtbRunning ?? false;
+            if (running)
+            {
+                ttbStatusText.Text = "TranslucentTB: detected ✓";
+                ttbStatusText.Visibility = Visibility.Visible;
+                ttbStatusLink.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                ttbStatusText.Visibility = Visibility.Collapsed;
+                ttbStatusLink.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void TtbStatusHyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = e.Uri.ToString(),
+                    UseShellExecute = true,
+                });
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to open TranslucentTB hyperlink");
+            }
+            e.Handled = true;
         }
 
         private void aboutButton_Click(object sender, RoutedEventArgs e)

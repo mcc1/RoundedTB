@@ -30,6 +30,19 @@
                         </TextBlock>
                     </Grid>
                 </Expander>
+                <Expander x:Name="expanderEffects" HorizontalAlignment="Center" Header="Adding blur or acrylic" VerticalAlignment="Top" Width="480" FontSize="16" FontFamily="Segoe UI Semibold">
+                    <Grid>
+                        <TextBlock Margin="0,5,0,0" TextWrapping="Wrap" FontWeight="Normal" FontFamily="Segoe UI" FontSize="14" Opacity="0.8" LineHeight="23">
+                    RoundedTB only handles the rounded shape; blur, acrylic and tint colour come from
+                    <Hyperlink NavigateUri="https://www.microsoft.com/store/apps/9PF1B3WTQ6LP" RequestNavigate="Hyperlink_RequestNavigate">TranslucentTB</Hyperlink>.
+                    Install both apps and they discover each other automatically — RoundedTB tells TranslucentTB to redraw whenever it reshapes the taskbar.
+                    <LineBreak/><LineBreak/>
+                    On Windows 11 (build 22000 and above) blur and acrylic on the taskbar are only reachable through TranslucentTB's XAML-level injection — the older single-API hook that worked on Windows 10 was disabled by Microsoft in modern Explorer builds. RoundedTB cannot replicate that path on its own; if you want acrylic, you want both apps.
+                    <LineBreak/><LineBreak/>
+                    The "TranslucentTB integration" checkbox in settings only fires its "redraw" message while TranslucentTB is actually running, so leaving it on costs nothing when you don't have TranslucentTB installed.
+                        </TextBlock>
+                    </Grid>
+                </Expander>
                 <Expander x:Name="expander1" HorizontalAlignment="Center" Header="About basic options" VerticalAlignment="Top" Width="480" FontSize="16" FontFamily="Segoe UI Semibold">
                     <Grid>
                         <TextBlock Margin="0,5,0,0" x:Name="bodyBlock1" TextWrapping="Wrap" FontWeight="Normal" FontFamily="Segoe UI" FontSize="14" Opacity="0.8" LineHeight="23">

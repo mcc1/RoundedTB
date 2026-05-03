@@ -613,6 +613,14 @@ namespace RoundedTB
                             {
                                 taskbar.AppListXaml?.ReloadTaskbarFrameElement();
                             });
+
+                            // Refresh TTB presence about once a second. This drives the
+                            // gating in Taskbar.cs so we stop firing TTB_ForceRefreshTaskbar
+                            // SendMessage calls into a non-existent worker window when TTB
+                            // isn't running, and resumes them automatically once the user
+                            // launches TTB without having to toggle CompositionCompat.
+                            mw.activeSettings.TtbRunning = Interaction.IsTranslucentTBRunning();
+
                             infrequentCount = 0;
                         }
 

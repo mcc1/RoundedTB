@@ -265,6 +265,15 @@ namespace RoundedTB
             public int AutoHide { get; set; }
             public int HoverRevealDelayMs { get; set; } // 0 = reveal immediately, >0 = hover for this many ms before autohide reveals
             public int HoverHideDelayMs { get; set; } // 0 = hide immediately once mouse leaves, >0 = wait this many ms of continuous non-hover before hiding
+
+            // Runtime-only mirror of Interaction.IsTranslucentTBRunning, refreshed by the
+            // background worker about once a second. Read at every region-update site to
+            // gate the TTB_ForceRefreshTaskbar SendMessage so we don't fire it into the
+            // void when TTB isn't actually present. JsonIgnore because the JSON file is
+            // user prefs, not live process state — persisting this would just lie on the
+            // next launch.
+            [Newtonsoft.Json.JsonIgnore]
+            public bool TtbRunning { get; set; }
         }
 
         public class EffectiveRegion
