@@ -1130,7 +1130,7 @@ namespace RoundedTB
                 ib.Height = 450;
                 ib.Title = "RoundedTB - TranslucentTB integration";
                 ib.titleBlock.Text = "Working with TranslucentTB";
-                ib.bodyBlock.Text = "\nTranslucentTB customises the opacity, blur and colour of the taskbar with finer control than RoundedTB itself. Leaving this option enabled lets the two work together: RoundedTB tells TranslucentTB to redraw whenever it reshapes the taskbar.\n\nThe integration only fires when TranslucentTB is actually running — RoundedTB now auto-detects it, so installing or quitting TranslucentTB while RoundedTB is up just works.\n\nThe handoff is necessary because of how Windows composites the taskbar; you might see minor flicker when the taskbar reshapes. If it bothers you, uncheck this box to disable the integration.\n\nGet TranslucentTB from the Microsoft Store: https://www.microsoft.com/store/apps/9PF1B3WTQ6LP";
+                ib.bodyBlock.Text = "\nTranslucentTB customises the opacity, blur and colour of the taskbar with finer control than RoundedTB itself. Leaving this option enabled lets the two work together: RoundedTB tells TranslucentTB to redraw whenever it reshapes the taskbar.\n\nThe integration only fires when TranslucentTB is actually running — RoundedTB now auto-detects it, so installing or quitting TranslucentTB while RoundedTB is up just works.\n\nThe handoff is necessary because of how Windows composites the taskbar; you might see minor flicker when the taskbar reshapes. If it bothers you, uncheck this box to disable the integration.\n\nGet TranslucentTB from the Microsoft Store: https://apps.microsoft.com/detail/9pf4kz2vn4w9";
                 ib.ShowDialog();
             }
         }
