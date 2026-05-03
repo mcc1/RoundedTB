@@ -164,7 +164,7 @@ namespace RoundedTB
                 LocalPInvoke.SetWindowLong(taskbar.TaskbarHwnd, LocalPInvoke.GWL_EXSTYLE, LocalPInvoke.GetWindowLong(taskbar.TaskbarHwnd, LocalPInvoke.GWL_EXSTYLE).ToInt32() ^ LocalPInvoke.WS_EX_TRANSPARENT);
             }
 
-            if (settings.CompositionCompat)
+            if (settings.CompositionCompat && settings.TtbRunning)
             {
                 Interaction.UpdateTranslucentTB(taskbar.TaskbarHwnd);
             }
@@ -193,7 +193,7 @@ namespace RoundedTB
 
                 region = LocalPInvoke.CreateRoundRectRgn(taskbarEffectiveRegion.Left, taskbarEffectiveRegion.Top, taskbarEffectiveRegion.Width, taskbarEffectiveRegion.Height, taskbarEffectiveRegion.CornerRadius, taskbarEffectiveRegion.CornerRadius);
                 LocalPInvoke.SetWindowRgn(taskbar.TaskbarHwnd, region, true);
-                if (settings.CompositionCompat)
+                if (settings.CompositionCompat && settings.TtbRunning)
                 {
                     Interaction.UpdateTranslucentTB(taskbar.TaskbarHwnd);
                 }
@@ -395,7 +395,7 @@ namespace RoundedTB
 
                 // Apply the final region to the taskbar
                 LocalPInvoke.SetWindowRgn(taskbar.TaskbarHwnd, workingRegion, true);
-                if (settings.CompositionCompat)
+                if (settings.CompositionCompat && settings.TtbRunning)
                 {
                     Interaction.UpdateTranslucentTB(taskbar.TaskbarHwnd);
                 }

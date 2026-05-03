@@ -314,6 +314,12 @@ namespace RoundedTB
             clockWidthInput.Text = activeSettings.ClockWidth.ToString();
             taskbarDetails = Taskbar.GenerateTaskbarInfo(isWindows11);
 
+            // Seed TTB detection before the first ApplyButton_Click so the initial
+            // region updates already gate UpdateTranslucentTB correctly. The background
+            // worker refreshes this every ~1s once it's running, but the first apply
+            // happens here in the constructor, before the worker has had a chance.
+            activeSettings.TtbRunning = Interaction.IsTranslucentTBRunning();
+
             ApplyButton_Click(null, null);
 
 
