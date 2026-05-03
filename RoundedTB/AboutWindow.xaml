@@ -38,7 +38,7 @@
                     <Grid>
                         <TextBlock Margin="0,5,0,0" TextWrapping="Wrap" FontWeight="Normal" FontFamily="Segoe UI" FontSize="14" Opacity="0.8" LineHeight="23">
                     RoundedTB only handles the rounded shape; blur, acrylic and tint colour come from
-                    <Hyperlink NavigateUri="https://www.microsoft.com/store/apps/9PF1B3WTQ6LP" RequestNavigate="Hyperlink_RequestNavigate">TranslucentTB</Hyperlink>.
+                    <Hyperlink NavigateUri="https://apps.microsoft.com/detail/9pf4kz2vn4w9" RequestNavigate="Hyperlink_RequestNavigate">TranslucentTB</Hyperlink>.
                     Install both apps and they discover each other automatically — RoundedTB tells TranslucentTB to redraw whenever it reshapes the taskbar.
                     <LineBreak/><LineBreak/>
                     On Windows 11 (build 22000 and above) blur and acrylic on the taskbar are only reachable through TranslucentTB's XAML-level injection — the older single-API hook that worked on Windows 10 was disabled by Microsoft in modern Explorer builds. RoundedTB cannot replicate that path on its own; if you want acrylic, you want both apps.

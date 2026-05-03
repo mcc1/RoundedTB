@@ -219,7 +219,7 @@
                 </TextBlock.Style>
             </TextBlock>
             <TextBlock x:Name="ttbStatusLink" FontSize="11" Margin="260,92,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Visibility="Collapsed">
-                <Hyperlink x:Name="ttbStatusHyperlink" RequestNavigate="TtbStatusHyperlink_RequestNavigate" NavigateUri="https://www.microsoft.com/store/apps/9PF1B3WTQ6LP">
+                <Hyperlink x:Name="ttbStatusHyperlink" RequestNavigate="TtbStatusHyperlink_RequestNavigate" NavigateUri="https://apps.microsoft.com/detail/9pf4kz2vn4w9">
                     <Run x:Name="ttbStatusLinkRun" Text="TranslucentTB: not detected — Get it"/>
                 </Hyperlink>
             </TextBlock>
