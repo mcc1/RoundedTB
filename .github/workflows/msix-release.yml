@@ -60,12 +60,16 @@ jobs:
           /p:PackageCertificateKeyFile="$((Resolve-Path RoundedTB.pfx).Path)" `
           /p:PackageCertificatePassword="${{ secrets.PFX_PASSWORD }}"
 
-    # The wapproj packaging path doesn't reliably leave loose binaries at
-    # RoundedTB\bin\<config>\<tfm>\, so build the project explicitly here. It's
-    # incremental (most work is cached from the wapproj run) and gives the zip
-    # step a known-good source folder regardless of how MSIX is configured.
+    # The wapproj packaging path leaves three copies of the payload in
+    # RoundedTB\bin\<config>\<tfm>\: the AnyCPU root output, plus per-RID
+    # win-x64\ and win-x64\msixpublish\ subfolders for MSIX consumption.
+    # Zipping the whole folder ballooned v0.4.1's portable archive to 186 MB
+    # against an expected ~16 MB. Use dotnet publish into its own clean output
+    # directory so we get only the deployable subset (no msixpublish leftover,
+    # no per-RID runtime spread). It's still incremental against the wapproj
+    # build because the project compile result is cached.
     - name: Build portable RoundedTB
-      run: dotnet build RoundedTB\RoundedTB.csproj -c Release -p:RTB_RELEASE=${{ env.RTB_RELEASE }}
+      run: dotnet publish RoundedTB\RoundedTB.csproj -c Release -p:RTB_RELEASE=${{ env.RTB_RELEASE }} -o RoundedTB\bin\portable
 
     - name: Locate output bundle
       id: find-msix
@@ -94,19 +98,13 @@ jobs:
         Copy-Item "${{ steps.find-msix.outputs.path }}" $stage
         Copy-Item "RoundedTB.cer" $stage
 
-        # Portable zip: the explicit "Build portable RoundedTB" step above
-        # leaves loose binaries at one of two paths depending on whether
-        # RTB_RELEASE is on (csproj redirects OutputPath to bin\<cfg>-RTB\
-        # only when the constant is defined). Pick the matching folder so
-        # release builds and dispatch-with-release_build=false both work.
+        # Portable zip: the dedicated dotnet publish output directory. Same
+        # path regardless of RTB_RELEASE because we hand publish an explicit
+        # -o, bypassing the conditional OutputPath redirect in the csproj.
         # Tag drives the filename so it matches the README convention
         # RoundedTB-vX.Y.zip; workflow_dispatch runs (no tag) fall back to
         # "dev" so the artifact upload still succeeds.
-        $portableSrc = if ("${{ env.RTB_RELEASE }}" -eq 'true') {
-            "RoundedTB\bin\Release-RTB\net10.0-windows10.0.19041"
-        } else {
-            "RoundedTB\bin\Release\net10.0-windows10.0.19041"
-        }
+        $portableSrc = "RoundedTB\bin\portable"
         if (-not (Test-Path $portableSrc))
         {
             throw "Portable build output not found at $portableSrc — did the 'Build portable RoundedTB' step succeed?"
