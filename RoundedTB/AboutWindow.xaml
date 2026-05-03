@@ -25,11 +25,7 @@
                 <Expander x:Name="expander0" HorizontalAlignment="Center" Header="What's new" VerticalAlignment="Top" Width="480" FontSize="16" FontFamily="Segoe UI Semibold">
                     <Grid>
                         <TextBlock Margin="0,5,0,0" x:Name="bodyBlock0" TextWrapping="Wrap" FontWeight="Normal" FontFamily="Segoe UI" FontSize="14" Opacity="0.8" LineHeight="23">
-                    • Ported to .NET 10 and the built-in WPF Fluent theme (no more WPF-UI dependency).
-                    <LineBreak/>
-                    • Signed MSIX bundle now available from the GitHub Releases page.
-                    <LineBreak/>
-                    <Bold>REMINDER: Autohide is currently rather buggy and must be entirely disabled in Windows.</Bold>
+                    <Bold>v0.4.0 — Independent autohide per segment.</Bold> In dynamic mode each of AppList / Tray / Widgets / SecondaryClock now has its own Auto-hide setting (Always show / Always hide / Show on desktop). Click a segment in the diagram and pick its autohide value just like you do for corner radius and margins. Segments sharing the same value form a hover group and reveal/hide together; differing values are independent. Existing configs migrate the previous single Auto-hide value to all segments automatically.
                     <LineBreak/>
                         </TextBlock>
                     </Grid>
