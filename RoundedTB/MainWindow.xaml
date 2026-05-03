@@ -211,14 +211,14 @@
             <CheckBox x:Name="fillMaximisedCheckBox" FontSize="12" Content="When a window is maximised, restore the taskbar" Margin="0,30,0,0" Checked="fillMaximisedCheckBox_Checked"  Unchecked="fillMaximisedCheckBox_Unchecked"  VerticalAlignment="Top" HorizontalAlignment="Left" d:LayoutOverrides="HorizontalAlignment, VerticalAlignment"/>
             <CheckBox x:Name="fillAltTabCheckBox" FontSize="12" Content="When alt+tab or win+tab is pressed, restore the taskbar" Margin="0,60,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" d:LayoutOverrides="HorizontalAlignment"/>
             <CheckBox x:Name="compositionFixCheckBox" FontSize="12" Content="TranslucentTB integration (auto-detected)" Margin="0,90,0,0" VerticalAlignment="Top" IsChecked="False" Checked="compositionFixCheckBox_Checked" HorizontalAlignment="Left" d:LayoutOverrides="HorizontalAlignment, VerticalAlignment"/>
-            <TextBlock x:Name="ttbStatusText" FontSize="11" Margin="20,110,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Opacity="0.75" Text="TranslucentTB: checking…">
+            <TextBlock x:Name="ttbStatusText" FontSize="11" Margin="260,92,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Opacity="0.75" Text="TranslucentTB: checking…">
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
                         <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
                     </Style>
                 </TextBlock.Style>
             </TextBlock>
-            <TextBlock x:Name="ttbStatusLink" FontSize="11" Margin="20,110,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Visibility="Collapsed">
+            <TextBlock x:Name="ttbStatusLink" FontSize="11" Margin="260,92,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Visibility="Collapsed">
                 <Hyperlink x:Name="ttbStatusHyperlink" RequestNavigate="TtbStatusHyperlink_RequestNavigate" NavigateUri="https://www.microsoft.com/store/apps/9PF1B3WTQ6LP">
                     <Run x:Name="ttbStatusLinkRun" Text="TranslucentTB: not detected — Get it"/>
                 </Hyperlink>
