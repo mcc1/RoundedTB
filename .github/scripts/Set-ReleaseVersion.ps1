@@ -1,9 +1,10 @@
 # Stamps a release tag (vX.Y.Z) into every file that carries the version, so
 # cutting a release no longer needs a "Bump version strings" commit:
-#   PackagingProject\Package.appxmanifest  Identity Version="2.X.Y.Z"
+#   PackagingProject\Package.appxmanifest  Identity Version="X.Y.Z.0"
 #   RoundedTB\AboutWindow.xaml(.cs)         "Community Edition vX.Y.Z"
-# The MSIX version keeps the existing 2.<tag> scheme (v0.4.2 -> 2.0.4.2), which
-# stays above the Store build 2.0.4.0 so in-place upgrades keep working.
+# Tags up to v0.4.2 shipped as MSIX 2.0.Y.Z; from v2.1.0 the tag and the MSIX
+# version are the same number. Tags below v2.1.0 are rejected: v0.x would
+# install as a downgrade of 2.0.4.2, and v2.0.x would collide with the old scheme.
 param(
     [Parameter(Mandatory)] [string] $Tag,
     [string] $Root = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
@@ -15,7 +16,10 @@ if ($Tag -notmatch '^v(\d+)\.(\d+)\.(\d+)$') {
     throw "Tag '$Tag' is not of the form vX.Y.Z"
 }
 $semver = "$($Matches[1]).$($Matches[2]).$($Matches[3])"
-$msixVersion = "2.$semver"
+if ([version]$semver -lt [version]'2.1.0') {
+    throw "Tag '$Tag' is below v2.1.0; releases after v0.4.2 (MSIX 2.0.4.2) start at v2.1.0"
+}
+$msixVersion = "$semver.0"
 
 function Update-File([string] $RelativePath, [string] $Pattern, [string] $Replacement) {
     $path = Join-Path $Root $RelativePath

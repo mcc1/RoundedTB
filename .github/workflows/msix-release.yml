@@ -10,7 +10,7 @@ on:
         type: boolean
         default: true
       tag:
-        description: 'Version to stamp, e.g. v0.4.3. Leave empty to build with the version already in the repo.'
+        description: 'Version to stamp, e.g. v2.1.0 (v2.1.0 or later). Leave empty to build with the version already in the repo.'
         type: string
         default: ''
 
